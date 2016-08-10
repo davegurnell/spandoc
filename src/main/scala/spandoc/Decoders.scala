@@ -19,10 +19,10 @@ trait Decoders extends DecoderHelpers {
       case "BlockQuote"     => Decoder[List[Block]].map[Block](BlockQuote.apply)
       case "OrderedList"    => Decoder[(ListAttributes, List[ListItem])].map[Block](OrderedList.tupled)
       case "BulletList"     => Decoder[List[ListItem]].map[Block](BulletList.apply)
-      case "DefinitionList" => ???
+      case "DefinitionList" => Decoder[List[DefinitionItem]].map[Block](DefinitionList.apply)
       case "Header"         => Decoder[(Int, Attr, List[Inline])].map[Block](Header.tupled)
       case "HorizontalRule" => constant[Block](HorizontalRule)
-      case "Table"          => ???
+      case "Table"          => Decoder[(List[Inline], List[Alignment], List[Double], List[TableCell], List[TableRow])].map[Block](Table.tupled)
       case "Div"            => Decoder[(Attr, List[Block])].map[Block](Div.tupled)
       case "Null"           => constant[Block](Null)
     }
@@ -36,21 +36,27 @@ trait Decoders extends DecoderHelpers {
       case "Superscript" => Decoder[List[Inline]].map[Inline](Superscript.apply)
       case "Subscript"   => Decoder[List[Inline]].map[Inline](Subscript.apply)
       case "SmallCaps"   => Decoder[List[Inline]].map[Inline](SmallCaps.apply)
-      case "Quoted"      => Decoder[(QuoteType, List[Inline])].map[Block](Quoted.tupled)
-      case "Cite"        => ???
-      case "Code"        => ???
+      case "Quoted"      => Decoder[(QuoteType, List[Inline])].map[Inline](Quoted.tupled)
+      case "Cite"        => Decoder[(List[Citation], List[Inline])].map[Inline](Cite.tupled)
+      case "Code"        => Decoder[(Attr, String)].map[Inline](Code.tupled)
       case "Space"       => constant[Inline](Space)
       case "SoftBreak"   => constant[Inline](SoftBreak)
       case "LineBreak"   => constant[Inline](LineBreak)
-      case "Math"        => ???
-      case "RawInline"   => ???
-      case "Link"        => ???
-      case "Image"       => ???
-      case "Note"        => ???
-      case "Span"        => ???
+      case "Math"        => Decoder[(MathType, String)].map[Inline](Math.tupled)
+      case "RawInline"   => Decoder[(String, String)].map[Inline](RawInline.tupled)
+      case "Link"        => Decoder[(List[Inline], Target)].map[Inline](Link.tupled)
+      case "Image"       => Decoder[(List[Inline], Target)].map[Inline](Image.tupled)
+      case "Note"        => Decoder[List[Block]].map[Inline](Note.apply)
+      case "Span"        => Decoder[(Attr, List[Inline])].map[Inline](Span.tupled)
     }
 
-  // TODO: Alignment
+  implicit def AlignmentDecoder: Decoder[Alignment] =
+    typedNode[Alignment] {
+      case "AlignLeft"    => constant[Alignment](AlignLeft)
+      case "AlignRight"   => constant[Alignment](AlignRight)
+      case "AlignCenter"  => constant[Alignment](AlignCenter)
+      case "AlignDefault" => constant[Alignment](AlignDefault)
+    }
 
   implicit def ListAttributesDecoder: Decoder[ListAttributes] =
     Decoder[(Int, ListNumberStyle, ListNumberDelim)].map(ListAttributes.tupled)
@@ -77,28 +83,49 @@ trait Decoders extends DecoderHelpers {
       case "TwoParens"    => constant[ListNumberDelim](TwoParens)
     }
 
-  // TODO: DefinitionItem
-  // TODO: Definition
+  implicit def DefinitionItemDecoder: Decoder[DefinitionItem] =
+    Decoder[(List[Inline], List[Definition])].map(DefinitionItem.tupled)
+
+  implicit def DefinitionDecoder: Decoder[Definition] =
+    Decoder[List[Block]].map(Definition.apply)
 
   implicit def AttrDecoder: Decoder[Attr] =
     Decoder[(String, List[String], List[(String, String)])].map(Attr.tupled)
 
-  // TODO: TableRow
-  // TODO: TableCell
+  implicit def TableRowDecoder: Decoder[TableRow] =
+    Decoder[List[TableCell]].map(TableRow.apply)
 
-  // TODO: QuoteType
+  implicit def TableCellDecoder: Decoder[TableCell] =
+    Decoder[List[Block]].map(TableCell.apply)
 
-  // TODO: Target
+  implicit def QuoteTypeDecoder: Decoder[QuoteType] =
+    typedNode[QuoteType] {
+      case "SingleQuote" => constant[QuoteType](SingleQuote)
+      case "DoubleQuote" => constant[QuoteType](DoubleQuote)
+    }
 
-  // TODO: MathType
+  implicit def TargetDecoder: Decoder[Target] =
+    Decoder[(String, String)].map(Target.tupled)
 
-  // TODO: Citation
+  implicit def MathTypeDecoder: Decoder[MathType] =
+    typedNode[MathType] {
+      case "DisplayMath" => constant[MathType](DisplayMath)
+      case "InlineMath"  => constant[MathType](InlineMath)
+    }
 
-  // TODO: CitationMode
+  implicit def CitationDecoder: Decoder[Citation] =
+    Decoder[(String, List[Inline], List[Inline], CitationMode, Int, Int)].map(Citation.tupled)
+
+  implicit def CitationModeDecoder: Decoder[CitationMode] =
+    typedNode[CitationMode] {
+      case "Constructors"   => constant[CitationMode](Constructors)
+      case "AuthorInText"   => constant[CitationMode](AuthorInText)
+      case "SuppressAuthor" => constant[CitationMode](SuppressAuthor)
+      case "NormalCitation" => constant[CitationMode](NormalCitation)
+    }
 }
 
 trait DecoderHelpers {
-
   def constant[A](value: A): Decoder[A] = new Decoder[A] {
     def apply(cursor: HCursor): Decoder.Result[A] =
       Xor.Right(value)
@@ -112,5 +139,4 @@ trait DecoderHelpers {
         c <- cursor.downField("c").as[A](d)
       } yield c
     }
-
 }

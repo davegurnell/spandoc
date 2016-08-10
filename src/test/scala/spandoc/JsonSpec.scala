@@ -22,6 +22,72 @@ class JsonSpec extends FreeSpec with Matchers with RoundtripHelpers {
     Para(List(Str("lorem"), Space, Str("ipsum")))
   }
 
+  "code block" in roundtrip[Block] {
+    i"""
+    {"t":"CodeBlock","c":[["",["scala"],[]],"1 + 1"]}
+    """
+  } {
+    CodeBlock(Attr("", List("scala"), Nil), "1 + 1")
+  }
+
+  "raw block" in roundtrip[Block] {
+    i"""
+    {"t":"RawBlock","c":["latex", "foo"]}
+    """
+  } {
+    RawBlock("latex", "foo")
+  }
+
+  "inline code" in roundtrip[Block] {
+    i"""
+    {"t":"Para","c":[{"t":"Code","c":[["",[],[]],"2 + 2"]}]}
+    """
+  } {
+    Para(List(Code(Attr("", Nil, Nil), "2 + 2")))
+  }
+
+  "math block" in roundtrip[Block] {
+    i"""
+    {"t":"Para","c":[{"t":"Math","c":[{"t":"InlineMath","c":[]},"3 + 3"]}]}
+    """
+  } {
+    Para(List(Math(InlineMath, "3 + 3")))
+  }
+
+  "inline math" in roundtrip[Block] {
+    i"""
+    {"t":"Para","c":[{"t":"Math","c":[{"t":"InlineMath","c":[]},"3 + 3"]}]}
+    """
+  } {
+    Para(List(Math(InlineMath, "3 + 3")))
+  }
+
+  "image" in roundtrip[Block] {
+    i"""
+    {"t":"Para","c":[
+      {"t":"Image","c":[
+        [{"t":"Str","c":"alttext"}],
+        ["http://example.com",""]
+      ]}
+    ]}
+    """
+  } {
+    Para(List(Image(List(Str("alttext")), Target("http://example.com", ""))))
+  }
+
+  "link" in roundtrip[Block] {
+    i"""
+    {"t":"Para","c":[
+      {"t":"Link","c":[
+        [{"t":"Str","c":"anchor"}],
+        ["url",""]
+      ]}
+    ]}
+    """
+  } {
+    Para(List(Link(List(Str("anchor")), Target("url", ""))))
+  }
+
   "heading" in roundtrip[Block] {
     i"""
     {"t": "Header", "c": [
@@ -32,6 +98,17 @@ class JsonSpec extends FreeSpec with Matchers with RoundtripHelpers {
     """
   } {
     Header(1, Attr("heading", Nil, Nil), List(Str("heading 1")))
+  }
+
+  "div" in roundtrip[Block] {
+    i"""
+    {"t":"Div","c":[
+      ["id",["class1","class2"],[["attr1","value1"],["attr2","value2"]]],
+      []
+    ]}
+    """
+  } {
+    Div(Attr("id", List("class1", "class2"), List("attr1" -> "value1", "attr2" -> "value2")), Nil)
   }
 
   "bullet list" in roundtrip[Block] {
@@ -161,6 +238,86 @@ class JsonSpec extends FreeSpec with Matchers with RoundtripHelpers {
               ListItem(List(Plain(List(Str("item2b")))))
             )
           )
+        ))
+      )
+    )
+  }
+
+  "definition list" in roundtrip[Block] {
+    i"""
+    {"t":"DefinitionList","c":[
+      [
+        [{"t":"Str","c":"term1"}],
+        [[{"t":"Plain","c":[{"t":"Str","c":"definition1"}]}]]
+      ],
+      [
+        [{"t":"Str","c":"term2"}],
+        [[{"t":"Plain","c":[{"t":"Str","c":"definition2"}]}]]
+      ]
+    ]}
+    """
+  } {
+    DefinitionList(List(
+      DefinitionItem(
+        List(Str("term1")),
+        List(Definition(List(Plain(List(Str("definition1"))))))
+      ),
+      DefinitionItem(
+        List(Str("term2")),
+        List(Definition(List(Plain(List(Str("definition2"))))))
+      )
+    ))
+  }
+
+  "table" in roundtrip[Block] {
+    i"""
+    {"t":"Table","c":[
+      [],
+      [
+        {"t":"AlignDefault","c":[]},
+        {"t":"AlignDefault","c":[]},
+        {"t":"AlignDefault","c":[]}
+      ],
+      [0.0,0.0,0.0],
+      [
+        [{"t":"Plain","c":[{"t":"Str","c":"A"}]}],
+        [{"t":"Plain","c":[{"t":"Str","c":"B"}]}],
+        [{"t":"Plain","c":[{"t":"Str","c":"C"}]}]
+      ],
+      [
+        [
+          [{"t":"Plain","c":[{"t":"Str","c":"1"}]}],
+          [{"t":"Plain","c":[{"t":"Str","c":"2"}]}],
+          [{"t":"Plain","c":[{"t":"Str","c":"3"}]}]
+        ],
+        [
+          [{"t":"Plain","c":[{"t":"Str","c":"4"}]}],
+          [{"t":"Plain","c":[{"t":"Str","c":"5"}]}],
+          [{"t":"Plain","c":[{"t":"Str","c":"6"}]}]
+        ]
+      ]
+    ]}
+    """
+  } {
+    Table(
+      Nil,
+      List(AlignDefault, AlignDefault, AlignDefault),
+      List(0.0, 0.0, 0.0),
+      List(
+        TableCell(List(Plain(List(Str("A"))))),
+        TableCell(List(Plain(List(Str("B"))))),
+        TableCell(List(Plain(List(Str("C")))))
+      ),
+      List(
+        TableRow(List(
+          TableCell(List(Plain(List(Str("1"))))),
+          TableCell(List(Plain(List(Str("2"))))),
+          TableCell(List(Plain(List(Str("3")))))
+        )),
+        TableRow(List(
+          TableCell(List(Plain(List(Str("4"))))),
+          TableCell(List(Plain(List(Str("5"))))),
+          TableCell(List(Plain(List(Str("6")))))
         ))
       )
     )

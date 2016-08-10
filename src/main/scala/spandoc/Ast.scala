@@ -49,8 +49,8 @@ case object SoftBreak extends Inline
 case object LineBreak extends Inline
 final case class Math(tpe: MathType, text: String) extends Inline
 final case class RawInline(format: String, text: String) extends Inline
-final case class Link(attr: Attr, inlines: List[Inline], target: Target) extends Inline
-final case class Image(attr: Attr, inlines: List[Inline], target: Target) extends Inline
+final case class Link(inlines: List[Inline], target: Target) extends Inline
+final case class Image(inlines: List[Inline], target: Target) extends Inline
 final case class Note(blocks: List[Block]) extends Inline
 final case class Span(attr: Attr, inlines: List[Inline]) extends Inline
 
