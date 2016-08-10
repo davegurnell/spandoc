@@ -11,7 +11,7 @@ trait Decoders extends DecoderHelpers {
   // TODO: MetaValue
 
   implicit def BlockDecoder: Decoder[Block] =
-    typedNode[Block] {
+    nodeDecoder[Block] {
       case "Plain"          => Decoder[List[Inline]].map[Block](Plain.apply)
       case "Para"           => Decoder[List[Inline]].map[Block](Para.apply)
       case "CodeBlock"      => Decoder[(Attr, String)].map[Block](CodeBlock.tupled)
@@ -28,7 +28,7 @@ trait Decoders extends DecoderHelpers {
     }
 
   implicit def InlineDecoder: Decoder[Inline] =
-    typedNode[Inline] {
+    nodeDecoder[Inline] {
       case "Str"         => Decoder[String].map[Inline](Str.apply)
       case "Emph"        => Decoder[List[Inline]].map[Inline](Emph.apply)
       case "Strong"      => Decoder[List[Inline]].map[Inline](Strong.apply)
@@ -51,7 +51,7 @@ trait Decoders extends DecoderHelpers {
     }
 
   implicit def AlignmentDecoder: Decoder[Alignment] =
-    typedNode[Alignment] {
+    nodeDecoder[Alignment] {
       case "AlignLeft"    => constant[Alignment](AlignLeft)
       case "AlignRight"   => constant[Alignment](AlignRight)
       case "AlignCenter"  => constant[Alignment](AlignCenter)
@@ -65,7 +65,7 @@ trait Decoders extends DecoderHelpers {
     Decoder[List[Block]].map(ListItem.apply)
 
   implicit def ListNumberStyleDecoder: Decoder[ListNumberStyle] =
-    typedNode[ListNumberStyle] {
+    nodeDecoder[ListNumberStyle] {
       case "DefaultStyle" => constant[ListNumberStyle](DefaultStyle)
       case "Example"      => constant[ListNumberStyle](Example)
       case "Decimal"      => constant[ListNumberStyle](Decimal)
@@ -76,7 +76,7 @@ trait Decoders extends DecoderHelpers {
     }
 
   implicit def ListNumberDelimDecoder: Decoder[ListNumberDelim] =
-    typedNode[ListNumberDelim] {
+    nodeDecoder[ListNumberDelim] {
       case "DefaultDelim" => constant[ListNumberDelim](DefaultDelim)
       case "Period"       => constant[ListNumberDelim](Period)
       case "OneParen"     => constant[ListNumberDelim](OneParen)
@@ -99,7 +99,7 @@ trait Decoders extends DecoderHelpers {
     Decoder[List[Block]].map(TableCell.apply)
 
   implicit def QuoteTypeDecoder: Decoder[QuoteType] =
-    typedNode[QuoteType] {
+    nodeDecoder[QuoteType] {
       case "SingleQuote" => constant[QuoteType](SingleQuote)
       case "DoubleQuote" => constant[QuoteType](DoubleQuote)
     }
@@ -108,7 +108,7 @@ trait Decoders extends DecoderHelpers {
     Decoder[(String, String)].map(Target.tupled)
 
   implicit def MathTypeDecoder: Decoder[MathType] =
-    typedNode[MathType] {
+    nodeDecoder[MathType] {
       case "DisplayMath" => constant[MathType](DisplayMath)
       case "InlineMath"  => constant[MathType](InlineMath)
     }
@@ -117,7 +117,7 @@ trait Decoders extends DecoderHelpers {
     Decoder[(String, List[Inline], List[Inline], CitationMode, Int, Int)].map(Citation.tupled)
 
   implicit def CitationModeDecoder: Decoder[CitationMode] =
-    typedNode[CitationMode] {
+    nodeDecoder[CitationMode] {
       case "Constructors"   => constant[CitationMode](Constructors)
       case "AuthorInText"   => constant[CitationMode](AuthorInText)
       case "SuppressAuthor" => constant[CitationMode](SuppressAuthor)
@@ -131,7 +131,7 @@ trait DecoderHelpers {
       Xor.Right(value)
   }
 
-  def typedNode[A](decoders: PartialFunction[String, Decoder[A]]): Decoder[A] =
+  def nodeDecoder[A](decoders: PartialFunction[String, Decoder[A]]): Decoder[A] =
     Decoder.instance[A] { cursor =>
       for {
         t <- cursor.downField("t").as[String]

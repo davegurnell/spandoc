@@ -327,13 +327,16 @@ class JsonSpec extends FreeSpec with Matchers with RoundtripHelpers {
 trait RoundtripHelpers {
   self: Matchers =>
 
-  def roundtrip[A: Decoder](json: String)(data: A): Unit = {
-    parse(json) match {
-      case Xor.Right(json) =>
-        Decoder[A].apply(json.hcursor) should equal(Xor.Right(data))
-
-      case Xor.Left(error) =>
-        fail("Could not parse JSON: " + error)
+  def roundtrip[A: Encoder: Decoder](jsonString0: String)(data: A): Unit = {
+    val result = for {
+      json0 <- parse(jsonString0)
+      value <- Decoder[A].apply(json0.hcursor)
+    } yield {
+      value should equal(data)
+      value.asJson should equal(json0)
+      ()
     }
+
+    result should equal(Xor.Right(()))
   }
 }

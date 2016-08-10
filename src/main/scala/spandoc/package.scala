@@ -1,3 +1,3 @@
 package spandoc
 
-object json extends Decoders
+object json extends Encoders with Decoders
