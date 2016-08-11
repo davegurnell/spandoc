@@ -6,9 +6,21 @@ import io.circe._
 import io.circe.syntax._
 
 trait Encoders extends EncoderHelpers {
-  // TODO: Pandoc
-  // TODO: Meta
-  // TODO: MetaValue
+  implicit def PandocEncoder: Encoder[Pandoc] =
+    Encoder.instance[Pandoc](pandoc => (pandoc.meta, pandoc.blocks).asJson)
+
+  implicit def MetaEncoder: Encoder[Meta] =
+    Encoder.instance[Meta](meta => Json.obj("unMeta" -> meta.data.asJson))
+
+  implicit def MetaValueEncoder: Encoder[MetaValue] =
+    Encoder.instance[MetaValue] {
+      case MetaMap(values)      => typedNode("MetaMap")(values)
+      case MetaList(values)     => typedNode("MetaList")(values)
+      case MetaBool(value)      => typedNode("MetaBool")(value)
+      case MetaString(value)    => typedNode("MetaString")(value)
+      case MetaInlines(inlines) => typedNode("MetaInlines")(inlines)
+      case MetaBlocks(blocks)   => typedNode("MetaBlocks")(blocks)
+    }
 
   implicit def BlockEncoder: Encoder[Block] =
     Encoder.instance[Block] {

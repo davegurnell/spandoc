@@ -2,17 +2,19 @@ package spandoc
 
 final case class Pandoc(meta: Meta, blocks: List[Block])
 
-final case class Meta(unMeta: Map[String, MetaValue])
+final case class Meta(data: Map[String, MetaValue])
 
 sealed abstract class MetaValue
-final case class MetaMap(value: Map[String, MetaValue]) extends MetaValue
-final case class MetaList(value: List[MetaValue]) extends MetaValue
-final case class MetaBoolean(value: Boolean) extends MetaValue
+final case class MetaMap(values: Map[String, MetaValue]) extends MetaValue
+final case class MetaList(values: List[MetaValue]) extends MetaValue
+final case class MetaBool(value: Boolean) extends MetaValue
 final case class MetaString(value: String) extends MetaValue
 final case class MetaInlines(inlines: List[Inline]) extends MetaValue
 final case class MetaBlocks(blocks: List[Block]) extends MetaValue
 
-sealed abstract class Block
+sealed abstract class Node
+
+sealed abstract class Block extends Node
 final case class Plain(inlines: List[Inline]) extends Block
 final case class Para(inlines: List[Inline]) extends Block
 final case class CodeBlock(attr: Attr, text: String) extends Block
@@ -33,7 +35,7 @@ final case class Table(
 final case class Div(attr: Attr, blocks: List[Block]) extends Block
 case object Null extends Block
 
-sealed abstract class Inline
+sealed abstract class Inline extends Node
 final case class Str(text: String) extends Inline
 final case class Emph(inlines: List[Inline]) extends Inline
 final case class Strong(inlines: List[Inline]) extends Inline

@@ -6,9 +6,23 @@ import io.circe._
 import io.circe.syntax._
 
 trait Decoders extends DecoderHelpers {
-  // TODO: Pandoc
-  // TODO: Meta
-  // TODO: MetaValue
+  implicit def PandocDecoder: Decoder[Pandoc] =
+    Decoder[(Meta, List[Block])].map(Pandoc.tupled)
+
+  implicit def MetaDecoder: Decoder[Meta] =
+    Decoder.instance[Meta] { cursor =>
+      cursor.downField("unMeta").as[Map[String, MetaValue]].map(Meta.apply)
+    }
+
+  implicit def MetaValueDecoder: Decoder[MetaValue] =
+    nodeDecoder[MetaValue] {
+      case "MetaMap"     => Decoder[Map[String, MetaValue]].map[MetaValue](MetaMap.apply)
+      case "MetaList"    => Decoder[List[MetaValue]].map[MetaValue](MetaList.apply)
+      case "MetaBool"    => Decoder[Boolean].map[MetaValue](MetaBool.apply)
+      case "MetaString"  => Decoder[String].map[MetaValue](MetaString.apply)
+      case "MetaInlines" => Decoder[List[Inline]].map[MetaValue](MetaInlines.apply)
+      case "MetaBlocks"  => Decoder[List[Block]].map[MetaValue](MetaBlocks.apply)
+    }
 
   implicit def BlockDecoder: Decoder[Block] =
     nodeDecoder[Block] {

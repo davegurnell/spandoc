@@ -7,8 +7,65 @@ import io.circe.syntax._
 import org.scalatest._
 import unindent._
 
-class JsonSpec extends FreeSpec with Matchers with RoundtripHelpers {
-  import json._
+class JsonSpec extends FreeSpec
+  with Matchers
+  with Encoders
+  with Decoders
+  with JsonSpecHelpers {
+
+  "pandoc" in roundtrip[Pandoc] {
+    i"""
+    [{"unMeta":{}},[]]
+    """
+  } {
+    Pandoc(Meta(Map.empty), Nil)
+  }
+
+  "meta" in roundtrip[Meta] {
+    i"""
+    {"unMeta":{
+      "a":{"t":"MetaString","c":"1"},
+      "b":{"t":"MetaInlines","c":[
+        {"t":"Str","c":"foo"}
+      ]},
+      "c":{"t":"MetaList","c":[
+        {"t":"MetaString","c":"1"},
+        {"t":"MetaString","c":"2"},
+        {"t":"MetaString","c":"3"}
+      ]},
+      "d":{"t":"MetaList","c":[
+        {"t":"MetaInlines","c":[{"t":"Str","c":"e"}]},
+        {"t":"MetaInlines","c":[{"t":"Str","c":"f"}]}
+      ]},
+      "g":{"t":"MetaBool","c":true},
+      "h":{"t":"MetaBlocks","c":[
+        {"t":"Para","c":[
+          {"t":"Str","c":"lorem"},
+          {"t":"Space","c":[]},
+          {"t":"Str","c":"ipsum"}
+        ]}
+      ]}
+    }}
+    """
+  } {
+    Meta(Map(
+      "a" -> MetaString("1"),
+      "b" -> MetaInlines(List(Str("foo"))),
+      "c" -> MetaList(List(
+               MetaString("1"),
+               MetaString("2"),
+               MetaString("3")
+             )),
+      "d" -> MetaList(List(
+               MetaInlines(List(Str("e"))),
+               MetaInlines(List(Str("f")))
+             )),
+      "g" -> MetaBool(true),
+      "h" -> MetaBlocks(List(
+               Para(List(Str("lorem"), Space, Str("ipsum")))
+             ))
+    ))
+  }
 
   "paragraph" in roundtrip[Block] {
     i"""
@@ -324,7 +381,7 @@ class JsonSpec extends FreeSpec with Matchers with RoundtripHelpers {
   }
 }
 
-trait RoundtripHelpers {
+trait JsonSpecHelpers {
   self: Matchers =>
 
   def roundtrip[A: Encoder: Decoder](jsonString0: String)(data: A): Unit = {
