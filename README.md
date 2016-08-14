@@ -48,3 +48,5 @@ Then run Pandoc using the `--filter` option to point to `filter.scala`:
 bash$ echo 'Lorem ipsum' | pandoc --to=html --filter=./filter.scala
 <p>LOREM IPSUM</p>
 ~~~
+
+[license]: http://www.apache.org/licenses/LICENSE-2.0
