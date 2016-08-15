@@ -420,9 +420,13 @@ class JsonSpec extends FreeSpec
     )
   }
 
-  "int sanity check" in roundtrip[Int]("0")(0)
+  "int sanity check" in {
+    Encoder[Int].apply(0) should be(parse("0").toOption.get)
+  }
 
-  "double sanity check" in roundtrip[Double]("0.0")(0.0)
+  "double sanity check" in {
+    Encoder[Double].apply(0.0) should be(parse("0.0").toOption.get)
+  }
 }
 
 trait JsonSpecHelpers {
