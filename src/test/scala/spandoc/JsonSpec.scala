@@ -326,46 +326,6 @@ class JsonSpec extends FreeSpec
     ))
   }
 
-  "empty table" in roundtrip[Block] {
-    i"""
-    {"t":"Table","c":[
-      [],
-      [],
-      [],
-      [],
-      []
-    ]}
-    """
-  } {
-    Table(
-      Nil,
-      Nil,
-      Nil,
-      Nil,
-      Nil
-    )
-  }
-
-  "nearly empty table" in roundtrip[Block] {
-    i"""
-    {"t":"Table","c":[
-      [],
-      [],
-      [0.0],
-      [],
-      []
-    ]}
-    """
-  } {
-    Table(
-      Nil,
-      Nil,
-      List(0.0),
-      Nil,
-      Nil
-    )
-  }
-
   "populated table" in roundtrip[Block] {
     i"""
     {"t":"Table","c":[
@@ -419,29 +379,28 @@ class JsonSpec extends FreeSpec
       )
     )
   }
-
-  "int sanity check" in {
-    Encoder[Int].apply(0) should be(parse("0").toOption.get)
-  }
-
-  "double sanity check" in {
-    Encoder[Double].apply(0.0) should be(parse("0.0").toOption.get)
-  }
 }
 
 trait JsonSpecHelpers {
   self: Matchers =>
 
-  def roundtrip[A: Encoder: Decoder](jsonString0: String)(data: A): Unit = {
-    val result = for {
-      json0 <- parse(jsonString0)
-      value <- Decoder[A].apply(json0.hcursor)
-    } yield {
-      value should equal(data)
-      value.asJson should equal(json0)
-      ()
-    }
+  def roundtrip[A: Encoder: Decoder](json: String)(expected: A): Unit = {
+    val decoded = unsafeDecode[A](unsafeParse(json))
 
-    result should equal(Xor.Right(()))
+    // Decode and check for equality:
+    decoded should be(expected)
+
+    // Round trip and check for equality again:
+    unsafeDecode[A](encode(decoded)) should be(expected)
   }
+
+  private def encode[A: Encoder](value: A): Json =
+    Encoder[A].apply(value)
+
+  private def unsafeDecode[A: Decoder](json: Json): A =
+    Decoder[A].apply(json.hcursor).toOption.get
+
+  private def unsafeParse(str: String): Json =
+    parse(str).toOption.get
 }
+
