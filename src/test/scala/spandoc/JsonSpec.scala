@@ -326,7 +326,47 @@ class JsonSpec extends FreeSpec
     ))
   }
 
-  "table" in roundtrip[Block] {
+  "empty table" in roundtrip[Block] {
+    i"""
+    {"t":"Table","c":[
+      [],
+      [],
+      [],
+      [],
+      []
+    ]}
+    """
+  } {
+    Table(
+      Nil,
+      Nil,
+      Nil,
+      Nil,
+      Nil
+    )
+  }
+
+  "nearly empty table" in roundtrip[Block] {
+    i"""
+    {"t":"Table","c":[
+      [],
+      [],
+      [0.0],
+      [],
+      []
+    ]}
+    """
+  } {
+    Table(
+      Nil,
+      Nil,
+      List(0.0),
+      Nil,
+      Nil
+    )
+  }
+
+  "populated table" in roundtrip[Block] {
     i"""
     {"t":"Table","c":[
       [],
@@ -379,6 +419,10 @@ class JsonSpec extends FreeSpec
       )
     )
   }
+
+  "int sanity check" in roundtrip[Int]("0")(0)
+
+  "double sanity check" in roundtrip[Double]("0.0")(0.0)
 }
 
 trait JsonSpecHelpers {
