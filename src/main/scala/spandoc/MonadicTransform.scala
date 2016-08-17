@@ -15,7 +15,7 @@ object MonadicTransform {
     new MonadicTransform[F](PartialFunction[Block, F[Block]](Monad[F].pure), inlineFunc)
 }
 
-class MonadicTransform[F[_]](val blockFunc: PartialFunction[Block, F[Block]], val inlineFunc: PartialFunction[Inline, F[Inline]])(implicit monad: Monad[F]) {
+class MonadicTransform[F[_]](val blockFunc: PartialFunction[Block, F[Block]], val inlineFunc: PartialFunction[Inline, F[Inline]])(implicit monad: Monad[F]) extends (Pandoc => F[Pandoc]) {
   private def pure[A](value: A): F[A] =
     monad.pure(value)
 
