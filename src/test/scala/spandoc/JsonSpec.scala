@@ -326,7 +326,7 @@ class JsonSpec extends FreeSpec
     ))
   }
 
-  "table" in roundtrip[Block] {
+  "populated table" in roundtrip[Block] {
     i"""
     {"t":"Table","c":[
       [],
@@ -384,16 +384,23 @@ class JsonSpec extends FreeSpec
 trait JsonSpecHelpers {
   self: Matchers =>
 
-  def roundtrip[A: Encoder: Decoder](jsonString0: String)(data: A): Unit = {
-    val result = for {
-      json0 <- parse(jsonString0)
-      value <- Decoder[A].apply(json0.hcursor)
-    } yield {
-      value should equal(data)
-      value.asJson should equal(json0)
-      ()
-    }
+  def roundtrip[A: Encoder: Decoder](json: String)(expected: A): Unit = {
+    val decoded = unsafeDecode[A](unsafeParse(json))
 
-    result should equal(Xor.Right(()))
+    // Decode and check for equality:
+    decoded should be(expected)
+
+    // Round trip and check for equality again:
+    unsafeDecode[A](encode(decoded)) should be(expected)
   }
+
+  private def encode[A: Encoder](value: A): Json =
+    Encoder[A].apply(value)
+
+  private def unsafeDecode[A: Decoder](json: Json): A =
+    Decoder[A].apply(json.hcursor).toOption.get
+
+  private def unsafeParse(str: String): Json =
+    parse(str).toOption.get
 }
+
