@@ -19,16 +19,7 @@ Here's an example script:
 
 import ammonite.repl._
 
-// Only needed for snapshot releases:
-resolvers() = resolvers() :+ Resolver.Http(
-  "Sonatype Snapshots",
-  "https://oss.sonatype.org/content/repositories/snapshots",
-  Resolvers.MavenPattern,
-  true
-)
-
-// Load the relevant version of spandoc:
-load.ivy("com.davegurnell" %% "spandoc" % "0.1.0-SNAPSHOT")
+load.ivy("com.davegurnell" %% "spandoc" % "<<VERSION>>")
 
 @
 
