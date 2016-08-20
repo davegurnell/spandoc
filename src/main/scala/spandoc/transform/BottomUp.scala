@@ -1,26 +1,46 @@
 package spandoc
+package transform
 
-import cats.Monad
+import cats.{Id, Monad}
 import cats.std.list._
 import cats.syntax.cartesian._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import cats.syntax.traverse._
+import scala.language.higherKinds
 
-object MonadicTransform {
-  def block[F[_]: Monad](blockFunc: PartialFunction[Block, F[Block]]): MonadicTransform[F] =
-    new MonadicTransform[F](blockFunc, PartialFunction[Inline, F[Inline]](Monad[F].pure))
+object BottomUp {
+  def block(func: PartialFunction[Block, Block]): BottomUp[Id] =
+    new BottomUp[Id] {
+      val blockTransform  = func
+      val inlineTransform = PartialFunction(pure[Inline])
+    }
 
-  def inline[F[_]: Monad](inlineFunc: PartialFunction[Inline, F[Inline]]): MonadicTransform[F] =
-    new MonadicTransform[F](PartialFunction[Block, F[Block]](Monad[F].pure), inlineFunc)
+  def inline(func: PartialFunction[Inline, Inline]): BottomUp[Id] =
+    new BottomUp[Id] {
+      val blockTransform  = PartialFunction(pure[Block])
+      val inlineTransform = func
+    }
+
+  def blockM[F[_]: Monad](func: PartialFunction[Block, F[Block]]): BottomUp[F] =
+    new BottomUp[F] {
+      val blockTransform  = func
+      val inlineTransform = PartialFunction(pure[Inline])
+    }
+
+  def inlineM[F[_]: Monad](func: PartialFunction[Inline, F[Inline]]): BottomUp[F] =
+    new BottomUp[F] {
+      val blockTransform  = PartialFunction(pure[Block])
+      val inlineTransform = func
+    }
 }
 
-class MonadicTransform[F[_]](val blockFunc: PartialFunction[Block, F[Block]], val inlineFunc: PartialFunction[Inline, F[Inline]])(implicit monad: Monad[F]) extends (Pandoc => F[Pandoc]) {
-  private def pure[A](value: A): F[A] =
-    monad.pure(value)
+abstract class BottomUp[F[_]](implicit monad: Monad[F]) extends Transform[F] {
+  type BlockTransform  = PartialFunction[Block,  F[Block]]
+  type InlineTransform = PartialFunction[Inline, F[Inline]]
 
-  def apply(pandoc0: Pandoc): F[Pandoc] =
-    pandoc0.blocks.traverse(apply).map(Pandoc(pandoc0.meta, _))
+  def blockTransform  : BlockTransform
+  def inlineTransform : InlineTransform
 
   def apply(block0: Block): F[Block] = {
     val block1: F[Block] = block0 match {
@@ -45,7 +65,7 @@ class MonadicTransform[F[_]](val blockFunc: PartialFunction[Block, F[Block]], va
 
     for {
       block1 <- block1
-      block2 <- blockFunc.lift(block1).getOrElse(pure(block1))
+      block2 <- blockTransform.lift(block1).getOrElse(pure(block1))
     } yield block2
   }
 
@@ -74,24 +94,7 @@ class MonadicTransform[F[_]](val blockFunc: PartialFunction[Block, F[Block]], va
 
     for {
       inline1 <- inline1
-      inline2 <- inlineFunc.lift(inline1).getOrElse(pure(inline1))
+      inline2 <- inlineTransform.lift(inline1).getOrElse(pure(inline1))
     } yield inline2
   }
-
-  def apply(item: ListItem): F[ListItem] =
-    item.blocks.traverse(apply).map(ListItem(_))
-
-  def apply(item: DefinitionItem): F[DefinitionItem] = (
-    item.term.traverse(apply) |@|
-    item.definitions.traverse(apply)
-  ).map(DefinitionItem(_, _))
-
-  def apply(defn: Definition): F[Definition] =
-    defn.blocks.traverse(apply).map(Definition(_))
-
-  def apply(row: TableRow): F[TableRow] =
-    row.cells.traverse(apply).map(TableRow(_))
-
-  def apply(cell: TableCell): F[TableCell] =
-    cell.blocks.traverse(apply).map(TableCell(_))
 }

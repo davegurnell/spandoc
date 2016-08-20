@@ -1,9 +1,15 @@
 organization := "com.davegurnell"
 name         := "spandoc"
-version      := "0.1.1"
+version      := "0.2.0-SNAPSHOT"
 scalaVersion := "2.11.8"
 
 licenses += ("Apache-2.0", url("http://apache.org/licenses/LICENSE-2.0"))
+
+scalacOptions ++= Seq(
+  "-feature",
+  "-unchecked",
+  "-deprecation"
+)
 
 libraryDependencies ++= Seq(
   "org.typelevel"   %% "cats"          % "0.4.1",
