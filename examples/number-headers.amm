@@ -49,6 +49,7 @@ def str(level: Int): HeaderState[Str] =
       .mkString("", ".", ". "))
   }
 
+// Number all headings in a document:
 val filter = TopDown.blockM[HeaderState] {
   case Header(level, attr, content) =>
     for {
@@ -58,4 +59,5 @@ val filter = TopDown.blockM[HeaderState] {
     } yield h
 }
 
+// Run the filter on standard in:
 transformStdin(filter(_).runA(Map.empty).value)
