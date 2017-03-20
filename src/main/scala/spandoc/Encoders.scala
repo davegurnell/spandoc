@@ -110,10 +110,10 @@ trait Encoders extends EncoderHelpers {
 
 trait EncoderHelpers {
   def typedNode[C: Encoder](t: String)(c: C): Json =
-    Json.obj("t" -> Json.string(t), "c" -> c.asJson)
+    Json.obj("t" -> Json.fromString(t), "c" -> c.asJson)
 
   def stringNodeEncoder[A]: Encoder[A] =
-    Encoder.instance[A](value => Json.obj("t" -> Json.string(value.toString), "c" -> Json.arr()))
+    Encoder.instance[A](value => Json.obj("t" -> Json.fromString(value.toString), "c" -> Json.arr()))
 
   def unlift[A, B](func: A => Option[B]): A => B =
     (a: A) => func(a).get

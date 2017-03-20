@@ -2,7 +2,7 @@ package spandoc
 package transform
 
 import cats.{Id, Monad}
-import cats.std.list._
+import cats.instances.list._
 import cats.syntax.cartesian._
 import cats.syntax.flatMap._
 import cats.syntax.functor._

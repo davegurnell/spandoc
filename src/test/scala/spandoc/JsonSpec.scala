@@ -1,6 +1,5 @@
 package spandoc
 
-import cats.data.Xor
 import io.circe._
 import io.circe.jawn._
 import io.circe.syntax._

@@ -142,14 +142,14 @@ trait Decoders extends DecoderHelpers {
 trait DecoderHelpers {
   def constant[A](value: A): Decoder[A] = new Decoder[A] {
     def apply(cursor: HCursor): Decoder.Result[A] =
-      Xor.Right(value)
+      Right(value)
   }
 
   def nodeDecoder[A](decoders: PartialFunction[String, Decoder[A]]): Decoder[A] =
     Decoder.instance[A] { cursor =>
       for {
         t <- cursor.downField("t").as[String]
-        d <- decoders.lift(t).toRightXor(DecodingFailure(s"Unrecognised type: '$t'", Nil))
+        d <- decoders.lift(t).toRight(DecodingFailure(s"Unrecognised type: '$t'", Nil))
         c <- cursor.downField("c").as[A](d)
       } yield c
     }

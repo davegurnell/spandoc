@@ -2,7 +2,7 @@ package spandoc
 package transform
 
 import cats.data.State
-import cats.std.list._
+import cats.instances.list._
 import cats.syntax.traverse._
 import io.circe._
 import io.circe.jawn._

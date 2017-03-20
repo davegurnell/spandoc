@@ -1,7 +1,9 @@
-organization := "com.davegurnell"
-name         := "spandoc"
-version      := "0.2.0-SNAPSHOT"
-scalaVersion := "2.11.8"
+organization      := "com.davegurnell"
+name              := "spandoc"
+version           := "0.2.0"
+
+scalaOrganization := "org.typelevel"
+scalaVersion      := "2.12.1"
 
 licenses += ("Apache-2.0", url("http://apache.org/licenses/LICENSE-2.0"))
 
@@ -12,12 +14,12 @@ scalacOptions ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "org.typelevel"   %% "cats"          % "0.4.1",
-  "io.circe"        %% "circe-core"    % "0.4.0",
-  "io.circe"        %% "circe-generic" % "0.4.0",
-  "io.circe"        %% "circe-parser"  % "0.4.0",
-  "com.davegurnell" %% "unindent"      % "1.0.0" % "test",
-  "org.scalatest"   %% "scalatest"     % "2.2.4" % "test"
+  "org.typelevel"   %% "cats"          % "0.9.0",
+  "io.circe"        %% "circe-core"    % "0.7.0",
+  "io.circe"        %% "circe-generic" % "0.7.0",
+  "io.circe"        %% "circe-parser"  % "0.7.0",
+  "com.davegurnell" %% "unindent"      % "1.1.0" % Test,
+  "org.scalatest"   %% "scalatest"     % "3.0.1" % Test
 )
 
 pomExtra in Global := {

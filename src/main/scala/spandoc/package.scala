@@ -1,5 +1,4 @@
 package object spandoc extends Encoders with Decoders {
-  import cats.data.Xor
   import io.circe._
   import io.circe.jawn._
 
@@ -7,10 +6,10 @@ package object spandoc extends Encoders with Decoders {
     transformString(transform)(scala.io.Source.stdin.mkString)
       .fold(Console.err.println, Console.out.println)
 
-  def transformString(transform: Pandoc => Pandoc)(input: String): Xor[Error, String] =
+  def transformString(transform: Pandoc => Pandoc)(input: String): Either[Error, String] =
     parse(input).flatMap(transformJson(transform)).map(_.noSpaces)
 
-  def transformJson(transform: Pandoc => Pandoc)(json0: Json): Xor[Error, Json] =
+  def transformJson(transform: Pandoc => Pandoc)(json0: Json): Either[Error, Json] =
     Decoder[Pandoc].apply(json0.hcursor)
       .map(pandoc => Encoder[Pandoc].apply(transform(pandoc)))
 }
