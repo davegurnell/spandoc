@@ -1,16 +1,15 @@
 #!/usr/bin/env amm
 
-load.ivy("io.circe"        %% "circe-core" % "0.4.0")
-load.ivy("io.circe"        %% "circe-jawn" % "0.4.0")
-load.ivy("com.davegurnell" %% "spandoc"    % "0.1.0")
+interp.load.ivy("com.davegurnell" %% "spandoc" % "0.2.1")
 
 @
 
 import spandoc._
+import spandoc.transform.TopDown
 
-val swapLists = Transform.block {
+val filter = TopDown.block {
   case OrderedList(_, items) => BulletList(items)
   case BulletList(items)     => OrderedList(ListAttributes(1, Decimal, Period), items)
 }
 
-transformStdin(swapLists)
+transformStdin(filter)

@@ -1,6 +1,6 @@
 organization      := "com.davegurnell"
 name              := "spandoc"
-version           := "0.2.0"
+version           := "0.2.1"
 
 scalaOrganization := "org.typelevel"
 scalaVersion      := "2.12.1"
@@ -14,7 +14,7 @@ scalacOptions ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "org.typelevel"   %% "cats"          % "0.9.0",
+  "org.typelevel"   %% "cats-core"     % "0.9.0",
   "io.circe"        %% "circe-core"    % "0.7.0",
   "io.circe"        %% "circe-generic" % "0.7.0",
   "io.circe"        %% "circe-parser"  % "0.7.0",

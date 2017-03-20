@@ -1,24 +1,33 @@
 #!/usr/bin/env amm
 
-// filename 'uppercase-headers.amm'
-
-load.ivy("io.circe"        %% "circe-core" % "0.4.0")
-load.ivy("io.circe"        %% "circe-jawn" % "0.4.0")
-load.ivy("com.davegurnell" %% "spandoc"    % "0.2.0-SNAPSHOT")
+interp.load.ivy("com.davegurnell" %% "spandoc" % "0.2.1")
 
 @
 
 import spandoc._
+import spandoc.transform.TopDown
+import cats.data.State
+import cats.instances.list._
+import cats.syntax.traverse._
 
 type HeaderState[A] = State[Boolean, A]
 
-val uppercaseHeaders = MonadicTransform.block[HeaderState] {
-  case Header(level, attr, inlineNodes) =>
-    for {
-      _ <- enterHeader
-      h <- inlineNodes.map(insideHeaders.apply).sequence
-      _ <- exitHeader
-    } yield h
+object filter extends TopDown[HeaderState] {
+  def blockTransform = {
+    case Header(level, attr, inlineNodes) =>
+      for {
+        _       <- State.set(true)
+        inlines <- inlineNodes.map(this.apply).sequence
+        _       <- State.set(false)
+      } yield Header(level, attr, inlines)
+  }
+
+  def inlineTransform = {
+    case str @ Str(text) =>
+      State.inspect { inHeader =>
+        if(inHeader) Str(text.toUpperCase) else str
+      }
+  }
 }
 
-transformStdin(uppercaseHeaders)
+transformStdin(ast => filter(ast).runA(false).value)
