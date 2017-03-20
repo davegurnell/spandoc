@@ -1,6 +1,6 @@
 organization      := "com.davegurnell"
 name              := "spandoc"
-version           := "0.2.1"
+version           := "0.2.1-SNAPSHOT"
 
 scalaOrganization := "org.typelevel"
 scalaVersion      := "2.12.1"
