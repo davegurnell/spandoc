@@ -2,7 +2,16 @@ package spandoc
 
 final case class Pandoc(meta: Meta, blocks: List[Block])
 
+object Pandoc {
+  def apply(blocks: List[Block]): Pandoc =
+    Pandoc(Meta.empty, blocks)
+}
+
 final case class Meta(data: Map[String, MetaValue])
+
+object Meta {
+  val empty = Meta(Map.empty)
+}
 
 sealed abstract class MetaValue
 final case class MetaMap(values: Map[String, MetaValue]) extends MetaValue
@@ -34,6 +43,11 @@ final case class Table(
 ) extends Block
 final case class Div(attr: Attr, blocks: List[Block]) extends Block
 case object Null extends Block
+
+object Header {
+  def apply(level: Int, inlines: List[Inline]): Header =
+    Header(level, Attr.empty, inlines)
+}
 
 sealed abstract class Inline extends Node
 final case class Str(text: String) extends Inline
@@ -86,6 +100,10 @@ final case class DefinitionItem(term: List[Inline], definitions: List[Definition
 final case class Definition(blocks: List[Block])
 
 final case class Attr(id: String, classes: List[String], attr: List[(String, String)])
+
+object Attr {
+  val empty = Attr("", Nil, Nil)
+}
 
 final case class TableRow(cells: List[TableCell])
 final case class TableCell(blocks: List[Block])

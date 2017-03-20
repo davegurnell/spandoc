@@ -1,29 +1,60 @@
 package spandoc
+package transform
 
-import cats.Monad
-import cats.std.list._
+import cats.{Id, Monad}
+import cats.instances.list._
 import cats.syntax.cartesian._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
 import cats.syntax.traverse._
+import scala.language.higherKinds
 
-object MonadicTransform {
-  def block[F[_]: Monad](blockFunc: PartialFunction[Block, F[Block]]): MonadicTransform[F] =
-    new MonadicTransform[F](blockFunc, PartialFunction[Inline, F[Inline]](Monad[F].pure))
+object TopDown {
+  def block(func: PartialFunction[Block, Block]): TopDown[Id] =
+    new TopDown[Id] {
+      val blockTransform  = func
+      val inlineTransform = PartialFunction.empty
+    }
 
-  def inline[F[_]: Monad](inlineFunc: PartialFunction[Inline, F[Inline]]): MonadicTransform[F] =
-    new MonadicTransform[F](PartialFunction[Block, F[Block]](Monad[F].pure), inlineFunc)
+  def inline(func: PartialFunction[Inline, Inline]): TopDown[Id] =
+    new TopDown[Id] {
+      val blockTransform  = PartialFunction.empty
+      val inlineTransform = func
+    }
+
+  def blockM[F[_]: Monad](func: PartialFunction[Block, F[Block]]): TopDown[F] =
+    new TopDown[F] {
+      val blockTransform  = func
+      val inlineTransform = PartialFunction.empty
+    }
+
+  def inlineM[F[_]: Monad](func: PartialFunction[Inline, F[Inline]]): TopDown[F] =
+    new TopDown[F] {
+      val blockTransform  = PartialFunction.empty
+      val inlineTransform = func
+    }
 }
 
-class MonadicTransform[F[_]](val blockFunc: PartialFunction[Block, F[Block]], val inlineFunc: PartialFunction[Inline, F[Inline]])(implicit monad: Monad[F]) extends (Pandoc => F[Pandoc]) {
-  private def pure[A](value: A): F[A] =
-    monad.pure(value)
+abstract class TopDown[F[_]](implicit monad: Monad[F]) extends Transform[F] {
+  type BlockTransform  = PartialFunction[Block,  F[Block]]
+  type InlineTransform = PartialFunction[Inline, F[Inline]]
 
-  def apply(pandoc0: Pandoc): F[Pandoc] =
-    pandoc0.blocks.traverse(apply).map(Pandoc(pandoc0.meta, _))
+  def blockTransform  : BlockTransform
+  def inlineTransform : InlineTransform
 
-  def apply(block0: Block): F[Block] = {
-    val block1: F[Block] = block0 match {
+  object BlockMatches {
+    def unapply(block: Block): Option[F[Block]] =
+      blockTransform.lift(block)
+  }
+
+  object InlineMatches {
+    def unapply(inline: Inline): Option[F[Inline]] =
+      inlineTransform.lift(inline)
+  }
+
+  def apply(block0: Block): F[Block] =
+    block0 match {
+      case BlockMatches(block)          => block
       case Plain(inlines)               => inlines.traverse(apply).map(Plain(_))
       case Para(inlines)                => inlines.traverse(apply).map(Para(_))
       case b: CodeBlock                 => pure(b)
@@ -43,14 +74,9 @@ class MonadicTransform[F[_]](val blockFunc: PartialFunction[Block, F[Block]], va
       case Null                         => pure(Null)
     }
 
-    for {
-      block1 <- block1
-      block2 <- blockFunc.lift(block1).getOrElse(pure(block1))
-    } yield block2
-  }
-
-  def apply(inline0: Inline): F[Inline] = {
-    val inline1: F[Inline] = inline0 match {
+  def apply(inline0: Inline): F[Inline] =
+    inline0 match {
+      case InlineMatches(inline)        => inline
       case i: Str                       => pure(i)
       case Emph(inlines)                => inlines.traverse(apply).map(Emph(_))
       case Strong(inlines)              => inlines.traverse(apply).map(Strong(_))
@@ -71,27 +97,4 @@ class MonadicTransform[F[_]](val blockFunc: PartialFunction[Block, F[Block]], va
       case Note(blocks)                 => blocks.traverse(apply).map(Note(_))
       case Span(attr, inlines)          => inlines.traverse(apply).map(Span(attr, _))
     }
-
-    for {
-      inline1 <- inline1
-      inline2 <- inlineFunc.lift(inline1).getOrElse(pure(inline1))
-    } yield inline2
-  }
-
-  def apply(item: ListItem): F[ListItem] =
-    item.blocks.traverse(apply).map(ListItem(_))
-
-  def apply(item: DefinitionItem): F[DefinitionItem] = (
-    item.term.traverse(apply) |@|
-    item.definitions.traverse(apply)
-  ).map(DefinitionItem(_, _))
-
-  def apply(defn: Definition): F[Definition] =
-    defn.blocks.traverse(apply).map(Definition(_))
-
-  def apply(row: TableRow): F[TableRow] =
-    row.cells.traverse(apply).map(TableRow(_))
-
-  def apply(cell: TableCell): F[TableCell] =
-    cell.blocks.traverse(apply).map(TableCell(_))
 }

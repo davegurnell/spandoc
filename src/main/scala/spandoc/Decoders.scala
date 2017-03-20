@@ -7,7 +7,7 @@ import io.circe.syntax._
 
 trait Decoders extends DecoderHelpers {
   implicit def PandocDecoder: Decoder[Pandoc] =
-    Decoder[(Meta, List[Block])].map(Pandoc.tupled)
+    Decoder[(Meta, List[Block])].map { case (m, b) => Pandoc(m, b) }
 
   implicit def MetaDecoder: Decoder[Meta] =
     Decoder.instance[Meta] { cursor =>
@@ -34,7 +34,7 @@ trait Decoders extends DecoderHelpers {
       case "OrderedList"    => Decoder[(ListAttributes, List[ListItem])].map[Block](OrderedList.tupled)
       case "BulletList"     => Decoder[List[ListItem]].map[Block](BulletList.apply)
       case "DefinitionList" => Decoder[List[DefinitionItem]].map[Block](DefinitionList.apply)
-      case "Header"         => Decoder[(Int, Attr, List[Inline])].map[Block](Header.tupled)
+      case "Header"         => Decoder[(Int, Attr, List[Inline])].map[Block] { case (i, a, l) => Header(i, a, l) }
       case "HorizontalRule" => constant[Block](HorizontalRule)
       case "Table"          => Decoder[(List[Inline], List[Alignment], List[Double], List[TableCell], List[TableRow])].map[Block](Table.tupled)
       case "Div"            => Decoder[(Attr, List[Block])].map[Block](Div.tupled)
@@ -104,7 +104,7 @@ trait Decoders extends DecoderHelpers {
     Decoder[List[Block]].map(Definition.apply)
 
   implicit def AttrDecoder: Decoder[Attr] =
-    Decoder[(String, List[String], List[(String, String)])].map(Attr.tupled)
+    Decoder[(String, List[String], List[(String, String)])].map { case (i, c, a) => Attr(i, c, a) }
 
   implicit def TableRowDecoder: Decoder[TableRow] =
     Decoder[List[TableCell]].map(TableRow.apply)
@@ -142,14 +142,14 @@ trait Decoders extends DecoderHelpers {
 trait DecoderHelpers {
   def constant[A](value: A): Decoder[A] = new Decoder[A] {
     def apply(cursor: HCursor): Decoder.Result[A] =
-      Xor.Right(value)
+      Right(value)
   }
 
   def nodeDecoder[A](decoders: PartialFunction[String, Decoder[A]]): Decoder[A] =
     Decoder.instance[A] { cursor =>
       for {
         t <- cursor.downField("t").as[String]
-        d <- decoders.lift(t).toRightXor(DecodingFailure(s"Unrecognised type: '$t'", Nil))
+        d <- decoders.lift(t).toRight(DecodingFailure(s"Unrecognised type: '$t'", Nil))
         c <- cursor.downField("c").as[A](d)
       } yield c
     }
