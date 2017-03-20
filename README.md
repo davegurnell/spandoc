@@ -19,15 +19,16 @@ Here's an example script:
 
 import ammonite.repl._
 
-load.ivy("com.davegurnell" %% "spandoc" % "<<VERSION>>")
+interp.load.ivy("com.davegurnell" %% "spandoc" % "<<VERSION>>")
 
 @
 
 import spandoc._
 
 // Define a transform. This one only transforms "inline" elements:
-val uppercase = Transform.inline {
-  case Str(str) => Str(str.toUpperCase)
+val uppercase = transofrm.TopDown.inline {
+  case Str(str) =>
+    Str(str.toUpperCase)
 }
 
 // Run the transform on stdin, printing the result to stdout:
