@@ -2,11 +2,7 @@ package spandoc
 package transform
 
 import cats.Monad
-import cats.instances.list._
-import cats.syntax.cartesian._
-import cats.syntax.flatMap._
-import cats.syntax.functor._
-import cats.syntax.traverse._
+import cats.implicits._
 import scala.language.higherKinds
 
 abstract class Transform[F[_]](implicit monad: Monad[F]) extends (Pandoc => F[Pandoc]) {
@@ -24,9 +20,9 @@ abstract class Transform[F[_]](implicit monad: Monad[F]) extends (Pandoc => F[Pa
     item.blocks.traverse(apply).map(ListItem(_))
 
   def apply(item: DefinitionItem): F[DefinitionItem] = (
-    item.term.traverse(apply) |@|
+    item.term.traverse(apply),
     item.definitions.traverse(apply)
-  ).map(DefinitionItem(_, _))
+  ).mapN(DefinitionItem(_, _))
 
   def apply(defn: Definition): F[Definition] =
     defn.blocks.traverse(apply).map(Definition(_))

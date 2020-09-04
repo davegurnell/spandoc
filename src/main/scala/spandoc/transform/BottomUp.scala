@@ -2,35 +2,31 @@ package spandoc
 package transform
 
 import cats.{Id, Monad}
-import cats.instances.list._
-import cats.syntax.cartesian._
-import cats.syntax.flatMap._
-import cats.syntax.functor._
-import cats.syntax.traverse._
+import cats.implicits._
 import scala.language.higherKinds
 
 object BottomUp {
   def block(func: PartialFunction[Block, Block]): BottomUp[Id] =
     new BottomUp[Id] {
       val blockTransform  = func
-      val inlineTransform = PartialFunction(pure[Inline])
+      val inlineTransform = { case value => value.pure[Id] }
     }
 
   def inline(func: PartialFunction[Inline, Inline]): BottomUp[Id] =
     new BottomUp[Id] {
-      val blockTransform  = PartialFunction(pure[Block])
+      val blockTransform  = { case value => value.pure[Id] }
       val inlineTransform = func
     }
 
   def blockM[F[_]: Monad](func: PartialFunction[Block, F[Block]]): BottomUp[F] =
     new BottomUp[F] {
       val blockTransform  = func
-      val inlineTransform = PartialFunction(pure[Inline])
+      val inlineTransform = { case value => value.pure[F] }
     }
 
   def inlineM[F[_]: Monad](func: PartialFunction[Inline, F[Inline]]): BottomUp[F] =
     new BottomUp[F] {
-      val blockTransform  = PartialFunction(pure[Block])
+      val blockTransform  = { case value => value.pure[F] }
       val inlineTransform = func
     }
 }
@@ -55,10 +51,10 @@ abstract class BottomUp[F[_]](implicit monad: Monad[F]) extends Transform[F] {
       case Header(level, attr, inlines) => inlines.traverse(apply).map(Header(level, attr, _))
       case HorizontalRule               => pure(HorizontalRule)
       case Table(c, a, w, h, r)         => (
-                                             c.traverse(apply) |@|
-                                             h.traverse(apply) |@|
+                                             c.traverse(apply),
+                                             h.traverse(apply),
                                              r.traverse(apply)
-                                           ).map(Table(_, a, w, _, _))
+                                           ).mapN(Table(_, a, w, _, _))
       case Div(attr, blocks)            => blocks.traverse(apply).map(Div(attr, _))
       case Null                         => pure(Null)
     }
