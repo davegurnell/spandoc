@@ -1,13 +1,40 @@
 language: scala
-
-scala:
-- 2.12.1
-
 jdk:
-- oraclejdk8
-
+  - oraclejdk8
+scala:
+  - 2.12.1
+env:
+  global:
+    - secure: CyERoAE8phg/5pTdVSETtm4Wilsjxn9O5F50UtW3UtT7IDgcaRFOolXOO4Ef5a3wja8RJk4vfIJjXwDg2fE6graKKtljQv/04A3pg/B48AaysyqWKag9qkXI6NUwVM5SoeKbyOarNsHGpPnm9Kg3L+qlkSudHA/sIRq0+V+BnMTC9p5kRtta2XDsInR0Ui9WbVEDqBmehxfVleKuwBUekeRBq3XDnK7gXJK9m9u3fdyRZYFKokw0mwmYzQjXLCa+3spAwLlnbVdMaRiGnE19unvBEfCUahHgpEPjchATSpypNbRwgQErde484w0/wevWXgl+JIE9LD3cGq0+rIG4geOfBKA+SnmLtxUOQ0i8tiDVcM5FkTNal0CPbz+iaZZe5keZLgwfIMAwQhsPb6eaFAu3ReTG8YQUsspAHaqnT06vT4TUrxZ+sv4DgFUaYFl3QfYXTUlY03cd6fOXJbJxntwEEPHWcvlLzpHY0QhVkZG1/2tj21oSx1/t125yeTvD0TNj9gIh4X4zw7A4hmkYHzg5edLaCl85HVE3YZmXve6HFuan5UsZDP71JMgLHhjkVrdu1/rXMYksDcuRQ+zN7oe/fUR80631qAPn8i6zEomnpI1njcrzI+A5p+joAhf/8s6VLyiFP4Lv0k8AGlqj9B0FLUkUCR3EMSNAc8E0AzA=
+    - secure: RxvZxuZ/qok2vnLRyC7g/6b3DyvYLq2+bUyfeF65aFc2fw2AEpqiKYSWk2s8T8yHheqXFVD5E31kKfx8axHS0AauJUURq3ra5wXQCTGPNVj5KQoodfMoRfu9WX1WK0mVPx/rX85LSUL+RWFe/Mm49SErxCFckxWyfUXm27JjDCSdkdDPq7MdLL47xxHzVhdkXJyRyQwiurgOvPVG4IXo6t7rZEEwfpmPTu4Fu5HlpwHtzSN2G6Z0mxsk82ztfTCmcRogUVz23OqDzC4jjttKOyC1jBZPxovbct4WUb7OtM+8ZdrdBQualeZ9E+uevZI3AYOGN7FbGV7xLM6oKBKF+1HPBzEE1vfyRyQAHmwmk/0vaGpvzAKKSiVbld/xJ1pnDSVsIZ3oNN2OlFw7bLb0MyRfvonUyC035rUmtTBQ8VKULhIK+2VU7eljaVeo252kv3q4TplduJWrD3CuSYfaRt0B0rMnQnTS0qYjvtfqLF8AMiA1KMDTerRmpcPVdmyothZbKJRdUY1O8YI7g0GjDTFY099BuPKWSnMZra5qroiilDawsRnwj84drc5QHMKIq/e7sSUVBTljIjCM7DMCQwUagaSN/tNTZJUHlPUzbiArUfduNKza91UW1uKJwpiY0DehKMcwnjiF4MmF7znX0X0EAjYOyIsNn0mUXM8BpUM=
+    - secure: kWhmuSIa/xWnPqIJJpXPJ0mbNltQ76qbkQfeZIHMbwzlMQaSTh0v7xySSe1F3Lof2TrWJP85eST60qZVzxFmdV/psO/8X+2c6u72+bk+j+QmbQ9Ob0Hf79m5hE6aly39vlWrf0O1j/GVhjgi1Kkr3d+pV/37EO7kNhHwF8dvVKt3jP4lNpXdJ/aFVuZGrOzwOOCRE4c6FdwORFrhrRvpSOxpsDgREHutpK7EaFMeqZwJNKy+sYDGCxOOL6SmbzlHQfcrfCZt1uE6iniAn9MtqjS54Y874bjem/Qx7tLLZaSXijpxZUzH9di8UbrfVsu5V95yjuM9WIKJc8n4s9jr/NG/MdzKF3oN0NyrmvedIkcggiFD2LMrtJ/bt5uLDD6aQzQHlV8trltClYyPQ5XMa8Y1RAlcnWLHo+0qMuKWhcmsZgRiEsQlCfaSNMp6cpg0D9HDrJOPj+hBIkg44ixldREkwEu1KZ8MSTwDDLc8kckRE2Kzo7QL4NZqJaKU9zVF5QsIijxb/LHDslRzTXU+Lg7pbt+IZfGS9syhOypiB6Xfy4/kg7EYcnMwDAmNcqYvj3Q390mkM9IJdcpeY0LSPYExDHdIJzWcUMeb+xNKSrd7p6nsZ/Fr2Oa2KVkm8oDy2YoMJh2Y2A2zonEbQf0Ys6YRaX/sduxZRIe1E4EjaEo=
+before_install:
+  - |
+    if [ $TRAVIS_PULL_REQUEST = 'false' ]; then
+      openssl aes-256-cbc \
+        -K $encrypted_1629a0cf9402_key \
+        -iv $encrypted_1629a0cf9402_iv \
+        -in travis/secrets.tar.enc \
+        -out travis/local.secrets.tar -d;
+      tar xv -C travis -f travis/secrets.tar;
+    fi
 script:
-- sbt clean coverage test coverageReport
-
+  - sbt ci
 after_success:
-- bash <(curl -s https://codecov.io/bash)
+  - bash <(curl -s https://codecov.io/bash)
+  - |
+    if [ $TRAVIS_PULL_REQUEST = 'false' ]; then
+      sbt release
+    fi
+cache:
+  directories:
+    - "$HOME/.sbt/1.0"
+    - "$HOME/.sbt/boot/scala*"
+    - "$HOME/.sbt/cache"
+    - "$HOME/.sbt/launchers"
+    - "$HOME/.ivy2"
+before_cache:
+  - du -h -d 1 $HOME/.ivy2/
+  - du -h -d 2 $HOME/.sbt/
+  - find $HOME/.sbt -name "*.lock" -type f -delete
+  - find $HOME/.ivy2/cache -name "ivydata-*.properties" -type f -delete
