@@ -38,6 +38,10 @@ developers := List(
   )
 )
 
+pgpPublicRing := file("./travis/local.pubring.asc")
+pgpSecretRing := file("./travis/local.secring.asc")
+releaseEarlyWith := SonatypePublisher
+
 // Command Aliases
 
 addCommandAlias("ci", ";clean ;coverage ;compile ;+test ;coverageReport")
