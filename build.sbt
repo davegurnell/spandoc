@@ -1,9 +1,7 @@
-organization      := "com.davegurnell"
-name              := "spandoc"
-version           := "0.2.1"
-
-scalaOrganization := "org.typelevel"
-scalaVersion      := "2.12.1"
+organization       := "com.davegurnell"
+name               := "spandoc"
+scalaVersion       := "2.13.3"
+crossScalaVersions := Seq("2.12.12", "2.13.3")
 
 licenses += ("Apache-2.0", url("http://apache.org/licenses/LICENSE-2.0"))
 
@@ -14,28 +12,34 @@ scalacOptions ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "org.typelevel"   %% "cats-core"     % "0.9.0",
-  "io.circe"        %% "circe-core"    % "0.7.0",
-  "io.circe"        %% "circe-generic" % "0.7.0",
-  "io.circe"        %% "circe-parser"  % "0.7.0",
-  "com.davegurnell" %% "unindent"      % "1.1.0" % Test,
-  "org.scalatest"   %% "scalatest"     % "3.0.1" % Test
+  "org.typelevel"   %% "cats-core"     % "2.2.0",
+  "io.circe"        %% "circe-core"    % "0.13.0",
+  "io.circe"        %% "circe-generic" % "0.13.0",
+  "io.circe"        %% "circe-parser"  % "0.13.0",
+  "com.davegurnell" %% "unindent"      % "1.1.1" % Test,
+  "org.scalatest"   %% "scalatest"     % "3.0.8" % Test
 )
 
-pomExtra in Global := {
-  <url>https://github.com/davegurnell/spandoc</url>
-  <scm>
-    <connection>scm:git:github.com/davegurnell/spandoc</connection>
-    <developerConnection>scm:git:git@github.com:davegurnell/spandoc</developerConnection>
-    <url>github.com/davegurnell/spandoc</url>
-  </scm>
-  <developers>
-    <developer>
-      <id>davegurnell</id>
-      <name>Dave Gurnell</name>
-      <url>http://davegurnell.com</url>
-      <organization>Underscore</organization>
-      <organizationUrl>http://underscore.io</organizationUrl>
-    </developer>
-  </developers>
-}
+homepage := Some(url("https://github.com/davegurnell/spandoc"))
+
+scmInfo := Some(
+  ScmInfo(
+    url("https://github.com/davegurnell/spandoc.git"),
+    "scm:git@github.com:davegurnell/spandoc.git"
+  )
+)
+
+developers := List(
+  Developer(
+    id = "davegurnell",
+    name = "Dave Gurnell",
+    email = "dave@underscore.io",
+    url = url("https://twitter.com/davegurnell")
+  )
+)
+
+// Command Aliases
+
+addCommandAlias("ci", ";clean ;coverage ;compile ;+test ;coverageReport")
+
+addCommandAlias("release", ";releaseEarly")
