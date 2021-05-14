@@ -3,18 +3,14 @@
 interp.load.ivy("com.davegurnell" %% "spandoc" % "0.2.1")
 
 @
-
 import spandoc._
 import spandoc.transform.TopDown
 
 object filter extends TopDown[Id] {
-  def blockTransform = {
+  def blockTransform = {}
 
-  }
-
-  def inlineTransform = {
-    case Str(text) =>
-      Str(text.toUpperCase)
+  def inlineTransform = { case Str(text) =>
+    Str(text.toUpperCase)
   }
 }
 

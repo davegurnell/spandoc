@@ -3,7 +3,6 @@
 interp.load.ivy("com.davegurnell" %% "spandoc" % "0.2.1")
 
 @
-
 import spandoc._
 import spandoc.transform.TopDown
 

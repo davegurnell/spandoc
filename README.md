@@ -25,7 +25,7 @@ interp.load.ivy("com.davegurnell" %% "spandoc" % "<<VERSION>>")
 import spandoc._
 
 // Define a transform. This one only transforms "inline" elements:
-val uppercase = transofrm.TopDown.inline {
+val uppercase = transform.TopDown.inline {
   case Str(str) =>
     Str(str.toUpperCase)
 }

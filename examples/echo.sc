@@ -1,0 +1,13 @@
+#!/usr/bin/env amm
+
+load.ivy("io.circe"        %% "circe-core" % "0.4.0")
+load.ivy("io.circe"        %% "circe-jawn" % "0.4.0")
+load.ivy("com.davegurnell" %% "spandoc"    % "0.1.0")
+
+@
+import spandoc._
+
+transformStdin { pandoc =>
+  Console.err.println(pandoc)
+  pandoc
+}

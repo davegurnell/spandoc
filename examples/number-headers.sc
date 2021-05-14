@@ -3,7 +3,6 @@
 interp.load.ivy("com.davegurnell" %% "spandoc" % "0.2.1")
 
 @
-
 import cats.data.State
 import spandoc._
 import spandoc.transform.TopDown
@@ -21,13 +20,12 @@ type HeaderState[A] = State[HeaderNumbers, A]
 
 // Number all headings in a document:
 object transform extends TopDown[HeaderState] {
-  def blockTransform = {
-    case Header(level, attr, content) =>
-      for {
-        s <- str(level)
-        _ <- inc(level)
-        h <- State.pure(Header(level, attr, s +: content))
-      } yield h
+  def blockTransform = { case Header(level, attr, content) =>
+    for {
+      s <- str(level)
+      _ <- inc(level)
+      h <- State.pure(Header(level, attr, s +: content))
+    } yield h
   }
 
   def inlineTransform = {}
@@ -43,7 +41,7 @@ object transform extends TopDown[HeaderState] {
   def set(level: Int, number: Int): HeaderState[Unit] =
     State.modify { nums =>
       Console.err.println("set " + level + " " + number + " " + nums + " => " + (nums + (level -> number)))
-      nums + (level -> number)
+      nums + (level                                                                            -> number)
     }
 
   // Reset counters for levels >= level to 0:
@@ -67,9 +65,11 @@ object transform extends TopDown[HeaderState] {
   def str(level: Int): HeaderState[Str] =
     State.inspect { nums =>
       val ans =
-        Str((1 to level)
-          .map(level => nums.getOrElse(level, 1))
-          .mkString("", ".", ". "))
+        Str(
+          (1 to level)
+            .map(level => nums.getOrElse(level, 1))
+            .mkString("", ".", ". ")
+        )
       Console.err.println("string " + ans)
       ans
     }
