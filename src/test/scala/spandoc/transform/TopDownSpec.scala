@@ -22,21 +22,21 @@ class TopDownSpec extends munit.FunSuite {
 
     val actual = uppercaseHeaders(
       Pandoc(
-        List(
-          Header(1, List(Str("Header"), Space, Str("the"), Space, Str("first"))),
-          Para(List(Str("Paragraph"), Space, Str("the"), Space, Str("first"))),
-          Header(2, List(Str("Header"), Space, Str("the"), Space, Str("second"))),
-          Para(List(Str("Paragraph"), Space, Str("the"), Space, Str("second")))
+        Vector(
+          Header(1, Vector(Str("Header"), Space, Str("the"), Space, Str("first"))),
+          Para(Vector(Str("Paragraph"), Space, Str("the"), Space, Str("first"))),
+          Header(2, Vector(Str("Header"), Space, Str("the"), Space, Str("second"))),
+          Para(Vector(Str("Paragraph"), Space, Str("the"), Space, Str("second")))
         )
       )
     )
 
     val expected = Pandoc(
-      List(
-        Header(1, List(Str("HEADER"), Space, Str("THE"), Space, Str("FIRST"))),
-        Para(List(Str("Paragraph"), Space, Str("the"), Space, Str("first"))),
-        Header(2, List(Str("HEADER"), Space, Str("THE"), Space, Str("SECOND"))),
-        Para(List(Str("Paragraph"), Space, Str("the"), Space, Str("second")))
+      Vector(
+        Header(1, Vector(Str("HEADER"), Space, Str("THE"), Space, Str("FIRST"))),
+        Para(Vector(Str("Paragraph"), Space, Str("the"), Space, Str("first"))),
+        Header(2, Vector(Str("HEADER"), Space, Str("THE"), Space, Str("SECOND"))),
+        Para(Vector(Str("Paragraph"), Space, Str("the"), Space, Str("second")))
       )
     )
 
@@ -72,21 +72,21 @@ class TopDownSpec extends munit.FunSuite {
 
     val actual = uppercaseFirstWord(
       Pandoc(
-        List(
-          Header(1, List(Str("Header"), Space, Str("the"), Space, Str("first"))),
-          Para(List(Str("Paragraph"), Space, Str("the"), Space, Str("first"))),
-          Header(2, List(Str("Header"), Space, Str("the"), Space, Str("second"))),
-          Para(List(Str("Paragraph"), Space, Str("the"), Space, Str("second")))
+        Vector(
+          Header(1, Vector(Str("Header"), Space, Str("the"), Space, Str("first"))),
+          Para(Vector(Str("Paragraph"), Space, Str("the"), Space, Str("first"))),
+          Header(2, Vector(Str("Header"), Space, Str("the"), Space, Str("second"))),
+          Para(Vector(Str("Paragraph"), Space, Str("the"), Space, Str("second")))
         )
       )
     ).runA(true).value
 
     val expected = Pandoc(
-      List(
-        Header(1, List(Str("HEADER"), Space, Str("the"), Space, Str("first"))),
-        Para(List(Str("PARAGRAPH"), Space, Str("the"), Space, Str("first"))),
-        Header(2, List(Str("HEADER"), Space, Str("the"), Space, Str("second"))),
-        Para(List(Str("PARAGRAPH"), Space, Str("the"), Space, Str("second")))
+      Vector(
+        Header(1, Vector(Str("HEADER"), Space, Str("the"), Space, Str("first"))),
+        Para(Vector(Str("PARAGRAPH"), Space, Str("the"), Space, Str("first"))),
+        Header(2, Vector(Str("HEADER"), Space, Str("the"), Space, Str("second"))),
+        Para(Vector(Str("PARAGRAPH"), Space, Str("the"), Space, Str("second")))
       )
     )
 

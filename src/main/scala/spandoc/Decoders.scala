@@ -1,70 +1,77 @@
 package spandoc
 
 import cats.data._
-import cats.syntax.all._
+import cats.implicits._
 import io.circe._
 import io.circe.syntax._
 
 trait Decoders extends DecoderHelpers {
-  implicit def PandocDecoder: Decoder[Pandoc] =
-    Decoder[(Meta, List[Block])].map { case (m, b) => Pandoc(m, b) }
-
-  implicit def MetaDecoder: Decoder[Meta] =
-    Decoder.instance[Meta] { cursor =>
-      cursor.downField("unMeta").as[Map[String, MetaValue]].map(Meta.apply)
+  implicit lazy val pandocDecoder: Decoder[Pandoc] =
+    Decoder.instance[Pandoc] { cursor =>
+      (
+        cursor.downField("blocks").as[Vector[Block]],
+        cursor.downField("meta").as[Meta],
+        cursor.downField("pandoc-api-version").as[PandocApiVersion]
+      ).mapN(Pandoc.apply)
     }
 
-  implicit def MetaValueDecoder: Decoder[MetaValue] =
+  implicit lazy val pandocApiVersion: Decoder[PandocApiVersion] =
+    Decoder[(Int, Int)].map(PandocApiVersion.tupled)
+
+  implicit lazy val metaDecoder: Decoder[Meta] =
+    Decoder[Map[String, MetaValue]].map(Meta.apply)
+
+  implicit lazy val metaValueDecoder: Decoder[MetaValue] =
     nodeDecoder[MetaValue] {
-      case "MetaMap"     => Decoder[Map[String, MetaValue]].map[MetaValue](MetaMap.apply)
-      case "MetaList"    => Decoder[List[MetaValue]].map[MetaValue](MetaList.apply)
-      case "MetaBool"    => Decoder[Boolean].map[MetaValue](MetaBool.apply)
-      case "MetaString"  => Decoder[String].map[MetaValue](MetaString.apply)
-      case "MetaInlines" => Decoder[List[Inline]].map[MetaValue](MetaInlines.apply)
-      case "MetaBlocks"  => Decoder[List[Block]].map[MetaValue](MetaBlocks.apply)
+      case "MetaMap"     => nodeContent[Map[String, MetaValue]].map[MetaValue](MetaMap.apply)
+      case "MetaList"    => nodeContent[Vector[MetaValue]].map[MetaValue](MetaList.apply)
+      case "MetaBool"    => nodeContent[Boolean].map[MetaValue](MetaBool.apply)
+      case "MetaString"  => nodeContent[String].map[MetaValue](MetaString.apply)
+      case "MetaInlines" => nodeContent[Vector[Inline]].map[MetaValue](MetaInlines.apply)
+      case "MetaBlocks"  => nodeContent[Vector[Block]].map[MetaValue](MetaBlocks.apply)
     }
 
-  implicit def BlockDecoder: Decoder[Block] =
+  implicit lazy val blockDecoder: Decoder[Block] =
     nodeDecoder[Block] {
-      case "Plain"          => Decoder[List[Inline]].map[Block](Plain.apply)
-      case "Para"           => Decoder[List[Inline]].map[Block](Para.apply)
-      case "CodeBlock"      => Decoder[(Attr, String)].map[Block](CodeBlock.tupled)
-      case "RawBlock"       => Decoder[(String, String)].map[Block](RawBlock.tupled)
-      case "BlockQuote"     => Decoder[List[Block]].map[Block](BlockQuote.apply)
-      case "OrderedList"    => Decoder[(ListAttributes, List[ListItem])].map[Block](OrderedList.tupled)
-      case "BulletList"     => Decoder[List[ListItem]].map[Block](BulletList.apply)
-      case "DefinitionList" => Decoder[List[DefinitionItem]].map[Block](DefinitionList.apply)
-      case "Header"         => Decoder[(Int, Attr, List[Inline])].map[Block] { case (i, a, l) => Header(i, a, l) }
+      case "Plain"          => nodeContent[Vector[Inline]].map[Block](Plain.apply)
+      case "Para"           => nodeContent[Vector[Inline]].map[Block](Para.apply)
+      case "CodeBlock"      => nodeContent[(Attr, String)].map[Block](CodeBlock.tupled)
+      case "RawBlock"       => nodeContent[(String, String)].map[Block](RawBlock.tupled)
+      case "BlockQuote"     => nodeContent[Vector[Block]].map[Block](BlockQuote.apply)
+      case "OrderedList"    => nodeContent[(ListAttributes, Vector[ListItem])].map[Block](OrderedList.tupled)
+      case "BulletList"     => nodeContent[Vector[ListItem]].map[Block](BulletList.apply)
+      case "DefinitionList" => nodeContent[Vector[DefinitionItem]].map[Block](DefinitionList.apply)
+      case "Header"         => nodeContent[(Int, Attr, Vector[Inline])].map[Block] { case (i, a, l) => Header(i, a, l) }
       case "HorizontalRule" => constant[Block](HorizontalRule)
-      case "Table"          => Decoder[(List[Inline], List[Alignment], List[Double], List[TableCell], List[TableRow])].map[Block](Table.tupled)
-      case "Div"            => Decoder[(Attr, List[Block])].map[Block](Div.tupled)
+      case "Table"          => nodeContent[(Vector[Inline], Vector[Alignment], Vector[Double], Vector[TableCell], Vector[TableRow])].map[Block](Table.tupled)
+      case "Div"            => nodeContent[(Attr, Vector[Block])].map[Block](Div.tupled)
       case "Null"           => constant[Block](Null)
     }
 
-  implicit def InlineDecoder: Decoder[Inline] =
+  implicit lazy val inlineDecoder: Decoder[Inline] =
     nodeDecoder[Inline] {
-      case "Str"         => Decoder[String].map[Inline](Str.apply)
-      case "Emph"        => Decoder[List[Inline]].map[Inline](Emph.apply)
-      case "Strong"      => Decoder[List[Inline]].map[Inline](Strong.apply)
-      case "Strikeout"   => Decoder[List[Inline]].map[Inline](Strikeout.apply)
-      case "Superscript" => Decoder[List[Inline]].map[Inline](Superscript.apply)
-      case "Subscript"   => Decoder[List[Inline]].map[Inline](Subscript.apply)
-      case "SmallCaps"   => Decoder[List[Inline]].map[Inline](SmallCaps.apply)
-      case "Quoted"      => Decoder[(QuoteType, List[Inline])].map[Inline](Quoted.tupled)
-      case "Cite"        => Decoder[(List[Citation], List[Inline])].map[Inline](Cite.tupled)
-      case "Code"        => Decoder[(Attr, String)].map[Inline](Code.tupled)
+      case "Str"         => nodeContent[String].map[Inline](Str.apply)
+      case "Emph"        => nodeContent[Vector[Inline]].map[Inline](Emph.apply)
+      case "Strong"      => nodeContent[Vector[Inline]].map[Inline](Strong.apply)
+      case "Strikeout"   => nodeContent[Vector[Inline]].map[Inline](Strikeout.apply)
+      case "Superscript" => nodeContent[Vector[Inline]].map[Inline](Superscript.apply)
+      case "Subscript"   => nodeContent[Vector[Inline]].map[Inline](Subscript.apply)
+      case "SmallCaps"   => nodeContent[Vector[Inline]].map[Inline](SmallCaps.apply)
+      case "Quoted"      => nodeContent[(QuoteType, Vector[Inline])].map[Inline](Quoted.tupled)
+      case "Cite"        => nodeContent[(Vector[Citation], Vector[Inline])].map[Inline](Cite.tupled)
+      case "Code"        => nodeContent[(Attr, String)].map[Inline](Code.tupled)
       case "Space"       => constant[Inline](Space)
       case "SoftBreak"   => constant[Inline](SoftBreak)
       case "LineBreak"   => constant[Inline](LineBreak)
-      case "Math"        => Decoder[(MathType, String)].map[Inline](Math.tupled)
-      case "RawInline"   => Decoder[(String, String)].map[Inline](RawInline.tupled)
-      case "Link"        => Decoder[(List[Inline], Target)].map[Inline](Link.tupled)
-      case "Image"       => Decoder[(List[Inline], Target)].map[Inline](Image.tupled)
-      case "Note"        => Decoder[List[Block]].map[Inline](Note.apply)
-      case "Span"        => Decoder[(Attr, List[Inline])].map[Inline](Span.tupled)
+      case "Math"        => nodeContent[(MathType, String)].map[Inline](Math.tupled)
+      case "RawInline"   => nodeContent[(String, String)].map[Inline](RawInline.tupled)
+      case "Link"        => nodeContent[(Attr, Vector[Inline], Target)].map[Inline](Link.tupled)
+      case "Image"       => nodeContent[(Vector[Inline], Target)].map[Inline](Image.tupled)
+      case "Note"        => nodeContent[Vector[Block]].map[Inline](Note.apply)
+      case "Span"        => nodeContent[(Attr, Vector[Inline])].map[Inline](Span.tupled)
     }
 
-  implicit def AlignmentDecoder: Decoder[Alignment] =
+  implicit lazy val alignmentDecoder: Decoder[Alignment] =
     nodeDecoder[Alignment] {
       case "AlignLeft"    => constant[Alignment](AlignLeft)
       case "AlignRight"   => constant[Alignment](AlignRight)
@@ -72,13 +79,13 @@ trait Decoders extends DecoderHelpers {
       case "AlignDefault" => constant[Alignment](AlignDefault)
     }
 
-  implicit def ListAttributesDecoder: Decoder[ListAttributes] =
+  implicit lazy val listAttributesDecoder: Decoder[ListAttributes] =
     Decoder[(Int, ListNumberStyle, ListNumberDelim)].map(ListAttributes.tupled)
 
-  implicit def ListItemDecoder: Decoder[ListItem] =
-    Decoder[List[Block]].map(ListItem.apply)
+  implicit lazy val listItemDecoder: Decoder[ListItem] =
+    Decoder[Vector[Block]].map(ListItem.apply)
 
-  implicit def ListNumberStyleDecoder: Decoder[ListNumberStyle] =
+  implicit lazy val listNumberStyleDecoder: Decoder[ListNumberStyle] =
     nodeDecoder[ListNumberStyle] {
       case "DefaultStyle" => constant[ListNumberStyle](DefaultStyle)
       case "Example"      => constant[ListNumberStyle](Example)
@@ -89,7 +96,7 @@ trait Decoders extends DecoderHelpers {
       case "UpperAlpha"   => constant[ListNumberStyle](UpperAlpha)
     }
 
-  implicit def ListNumberDelimDecoder: Decoder[ListNumberDelim] =
+  implicit lazy val listNumberDelimDecoder: Decoder[ListNumberDelim] =
     nodeDecoder[ListNumberDelim] {
       case "DefaultDelim" => constant[ListNumberDelim](DefaultDelim)
       case "Period"       => constant[ListNumberDelim](Period)
@@ -97,40 +104,40 @@ trait Decoders extends DecoderHelpers {
       case "TwoParens"    => constant[ListNumberDelim](TwoParens)
     }
 
-  implicit def DefinitionItemDecoder: Decoder[DefinitionItem] =
-    Decoder[(List[Inline], List[Definition])].map(DefinitionItem.tupled)
+  implicit lazy val definitionItemDecoder: Decoder[DefinitionItem] =
+    Decoder[(Vector[Inline], Vector[Definition])].map(DefinitionItem.tupled)
 
-  implicit def DefinitionDecoder: Decoder[Definition] =
-    Decoder[List[Block]].map(Definition.apply)
+  implicit lazy val definitionDecoder: Decoder[Definition] =
+    Decoder[Vector[Block]].map(Definition.apply)
 
-  implicit def AttrDecoder: Decoder[Attr] =
-    Decoder[(String, List[String], List[(String, String)])].map { case (i, c, a) => Attr(i, c, a) }
+  implicit lazy val attrDecoder: Decoder[Attr] =
+    Decoder[(String, Vector[String], Vector[(String, String)])].map { case (i, c, a) => Attr(i, c, a) }
 
-  implicit def TableRowDecoder: Decoder[TableRow] =
-    Decoder[List[TableCell]].map(TableRow.apply)
+  implicit lazy val tableRowDecoder: Decoder[TableRow] =
+    Decoder[Vector[TableCell]].map(TableRow.apply)
 
-  implicit def TableCellDecoder: Decoder[TableCell] =
-    Decoder[List[Block]].map(TableCell.apply)
+  implicit lazy val tableCellDecoder: Decoder[TableCell] =
+    Decoder[Vector[Block]].map(TableCell.apply)
 
-  implicit def QuoteTypeDecoder: Decoder[QuoteType] =
+  implicit lazy val quoteTypeDecoder: Decoder[QuoteType] =
     nodeDecoder[QuoteType] {
       case "SingleQuote" => constant[QuoteType](SingleQuote)
       case "DoubleQuote" => constant[QuoteType](DoubleQuote)
     }
 
-  implicit def TargetDecoder: Decoder[Target] =
+  implicit lazy val targetDecoder: Decoder[Target] =
     Decoder[(String, String)].map(Target.tupled)
 
-  implicit def MathTypeDecoder: Decoder[MathType] =
+  implicit lazy val mathTypeDecoder: Decoder[MathType] =
     nodeDecoder[MathType] {
       case "DisplayMath" => constant[MathType](DisplayMath)
       case "InlineMath"  => constant[MathType](InlineMath)
     }
 
-  implicit def CitationDecoder: Decoder[Citation] =
-    Decoder[(String, List[Inline], List[Inline], CitationMode, Int, Int)].map(Citation.tupled)
+  implicit lazy val citationDecoder: Decoder[Citation] =
+    Decoder[(String, Vector[Inline], Vector[Inline], CitationMode, Int, Int)].map(Citation.tupled)
 
-  implicit def CitationModeDecoder: Decoder[CitationMode] =
+  implicit lazy val citationModeDecoder: Decoder[CitationMode] =
     nodeDecoder[CitationMode] {
       case "Constructors"   => constant[CitationMode](Constructors)
       case "AuthorInText"   => constant[CitationMode](AuthorInText)
@@ -150,7 +157,10 @@ trait DecoderHelpers {
       for {
         t <- cursor.downField("t").as[String]
         d <- decoders.lift(t).toRight(DecodingFailure(s"Unrecognised type: '$t'", Nil))
-        c <- cursor.downField("c").as[A](d)
+        c <- cursor.as[A](d)
       } yield c
     }
+
+  def nodeContent[A: Decoder]: Decoder[A] =
+    Decoder[A].at("c")
 }

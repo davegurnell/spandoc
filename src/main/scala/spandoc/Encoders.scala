@@ -6,13 +6,22 @@ import io.circe._
 import io.circe.syntax._
 
 trait Encoders extends EncoderHelpers {
-  implicit def PandocEncoder: Encoder[Pandoc] =
-    Encoder.instance[Pandoc](pandoc => (pandoc.meta, pandoc.blocks).asJson)
+  implicit lazy val pandocEncoder: Encoder[Pandoc] =
+    Encoder.instance[Pandoc] { pandoc =>
+      Json.obj(
+        "blocks"             -> pandoc.blocks.asJson,
+        "meta"               -> pandoc.meta.asJson,
+        "pandoc-api-version" -> pandoc.apiVersion.asJson
+      )
+    }
 
-  implicit def MetaEncoder: Encoder[Meta] =
-    Encoder.instance[Meta](meta => Json.obj("unMeta" -> meta.data.asJson))
+  implicit lazy val pandocApiVersionEncoder: Encoder[PandocApiVersion] =
+    Encoder.instance[PandocApiVersion](v => (v.major, v.minor).asJson)
 
-  implicit def MetaValueEncoder: Encoder[MetaValue] =
+  implicit lazy val metaEncoder: Encoder[Meta] =
+    Encoder.instance[Meta](meta => meta.data.asJson)
+
+  implicit lazy val metaValueEncoder: Encoder[MetaValue] =
     Encoder.instance[MetaValue] {
       case MetaMap(values)      => typedNode("MetaMap")(values)
       case MetaList(values)     => typedNode("MetaList")(values)
@@ -22,7 +31,7 @@ trait Encoders extends EncoderHelpers {
       case MetaBlocks(blocks)   => typedNode("MetaBlocks")(blocks)
     }
 
-  implicit def BlockEncoder: Encoder[Block] =
+  implicit lazy val blockEncoder: Encoder[Block] =
     Encoder.instance[Block] {
       case Plain(inlines)               => typedNode("Plain")(inlines)
       case Para(inlines)                => typedNode("Para")(inlines)
@@ -39,72 +48,72 @@ trait Encoders extends EncoderHelpers {
       case Null                         => typedNode("Null")(Json.arr())
     }
 
-  implicit def InlineEncoder: Encoder[Inline] =
+  implicit lazy val inlineEncoder: Encoder[Inline] =
     Encoder.instance[Inline] {
-      case Str(text)                => typedNode("Str")(text)
-      case Emph(inlines)            => typedNode("Emph")(inlines)
-      case Strong(inlines)          => typedNode("Strong")(inlines)
-      case Strikeout(inlines)       => typedNode("Strikeout")(inlines)
-      case Superscript(inlines)     => typedNode("Superscript")(inlines)
-      case Subscript(inlines)       => typedNode("Subscript")(inlines)
-      case SmallCaps(inlines)       => typedNode("SmallCaps")(inlines)
-      case Quoted(tpe, inlines)     => typedNode("Quoted")((tpe, inlines))
-      case Cite(citations, inlines) => typedNode("Cite")((citations, inlines))
-      case Code(attr, text)         => typedNode("Code")((attr, text))
-      case Space                    => typedNode("Space")(Json.arr())
-      case SoftBreak                => typedNode("SoftBreak")(Json.arr())
-      case LineBreak                => typedNode("LineBreak")(Json.arr())
-      case Math(tpe, text)          => typedNode("Math")((tpe, text))
-      case RawInline(format, text)  => typedNode("RawInline")((format, text))
-      case Link(inlines, target)    => typedNode("Link")((inlines, target))
-      case Image(inlines, target)   => typedNode("Image")((inlines, target))
-      case Note(blocks)             => typedNode("Note")(blocks)
-      case Span(attr, inlines)      => typedNode("Span")((attr, inlines))
+      case Str(text)                   => typedNode("Str")(text)
+      case Emph(inlines)               => typedNode("Emph")(inlines)
+      case Strong(inlines)             => typedNode("Strong")(inlines)
+      case Strikeout(inlines)          => typedNode("Strikeout")(inlines)
+      case Superscript(inlines)        => typedNode("Superscript")(inlines)
+      case Subscript(inlines)          => typedNode("Subscript")(inlines)
+      case SmallCaps(inlines)          => typedNode("SmallCaps")(inlines)
+      case Quoted(tpe, inlines)        => typedNode("Quoted")((tpe, inlines))
+      case Cite(citations, inlines)    => typedNode("Cite")((citations, inlines))
+      case Code(attr, text)            => typedNode("Code")((attr, text))
+      case Space                       => typedNode("Space")(Json.arr())
+      case SoftBreak                   => typedNode("SoftBreak")(Json.arr())
+      case LineBreak                   => typedNode("LineBreak")(Json.arr())
+      case Math(tpe, text)             => typedNode("Math")((tpe, text))
+      case RawInline(format, text)     => typedNode("RawInline")((format, text))
+      case Link(attr, inlines, target) => typedNode("Link")((attr, inlines, target))
+      case Image(inlines, target)      => typedNode("Image")((inlines, target))
+      case Note(blocks)                => typedNode("Note")(blocks)
+      case Span(attr, inlines)         => typedNode("Span")((attr, inlines))
     }
 
-  implicit def AlignmentEncoder: Encoder[Alignment] =
+  implicit lazy val alignmentEncoder: Encoder[Alignment] =
     stringNodeEncoder[Alignment]
 
-  implicit def ListAttributesEncoder: Encoder[ListAttributes] =
+  implicit lazy val listAttributesEncoder: Encoder[ListAttributes] =
     Encoder[(Int, ListNumberStyle, ListNumberDelim)].contramap(unlift(ListAttributes.unapply))
 
-  implicit def ListItemEncoder: Encoder[ListItem] =
-    Encoder[List[Block]].contramap(unlift(ListItem.unapply))
+  implicit lazy val listItemEncoder: Encoder[ListItem] =
+    Encoder[Vector[Block]].contramap(unlift(ListItem.unapply))
 
-  implicit def ListNumberStyleEncoder: Encoder[ListNumberStyle] =
+  implicit lazy val listNumberStyleEncoder: Encoder[ListNumberStyle] =
     stringNodeEncoder[ListNumberStyle]
 
-  implicit def ListNumberDelimEncoder: Encoder[ListNumberDelim] =
+  implicit lazy val listNumberDelimEncoder: Encoder[ListNumberDelim] =
     stringNodeEncoder[ListNumberDelim]
 
-  implicit def DefinitionItemEncoder: Encoder[DefinitionItem] =
-    Encoder[(List[Inline], List[Definition])].contramap(unlift(DefinitionItem.unapply))
+  implicit lazy val definitionItemEncoder: Encoder[DefinitionItem] =
+    Encoder[(Vector[Inline], Vector[Definition])].contramap(unlift(DefinitionItem.unapply))
 
-  implicit def DefinitionEncoder: Encoder[Definition] =
-    Encoder[List[Block]].contramap(unlift(Definition.unapply))
+  implicit lazy val definitionEncoder: Encoder[Definition] =
+    Encoder[Vector[Block]].contramap(unlift(Definition.unapply))
 
-  implicit def AttrEncoder: Encoder[Attr] =
-    Encoder[(String, List[String], List[(String, String)])].contramap(unlift(Attr.unapply))
+  implicit lazy val attrEncoder: Encoder[Attr] =
+    Encoder[(String, Vector[String], Vector[(String, String)])].contramap(unlift(Attr.unapply))
 
-  implicit def TableRowEncoder: Encoder[TableRow] =
-    Encoder[List[TableCell]].contramap(unlift(TableRow.unapply))
+  implicit lazy val tableRowEncoder: Encoder[TableRow] =
+    Encoder[Vector[TableCell]].contramap(unlift(TableRow.unapply))
 
-  implicit def TableCellEncoder: Encoder[TableCell] =
-    Encoder[List[Block]].contramap(unlift(TableCell.unapply))
+  implicit lazy val tableCellEncoder: Encoder[TableCell] =
+    Encoder[Vector[Block]].contramap(unlift(TableCell.unapply))
 
-  implicit def QuoteTypeEncoder: Encoder[QuoteType] =
+  implicit lazy val quoteTypeEncoder: Encoder[QuoteType] =
     stringNodeEncoder[QuoteType]
 
-  implicit def TargetEncoder: Encoder[Target] =
+  implicit lazy val targetEncoder: Encoder[Target] =
     Encoder[(String, String)].contramap(unlift(Target.unapply))
 
-  implicit def MathTypeEncoder: Encoder[MathType] =
+  implicit lazy val mathTypeEncoder: Encoder[MathType] =
     stringNodeEncoder[MathType]
 
-  implicit def CitationEncoder: Encoder[Citation] =
-    Encoder[(String, List[Inline], List[Inline], CitationMode, Int, Int)].contramap(unlift(Citation.unapply))
+  implicit lazy val citationEncoder: Encoder[Citation] =
+    Encoder[(String, Vector[Inline], Vector[Inline], CitationMode, Int, Int)].contramap(unlift(Citation.unapply))
 
-  implicit def CitationModeEncoder: Encoder[CitationMode] =
+  implicit lazy val citationModeEncoder: Encoder[CitationMode] =
     stringNodeEncoder[CitationMode]
 }
 

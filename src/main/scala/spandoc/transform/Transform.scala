@@ -10,7 +10,7 @@ abstract class Transform[F[_]](implicit monad: Monad[F]) extends (Pandoc => F[Pa
     monad.pure(value)
 
   def apply(pandoc0: Pandoc): F[Pandoc] =
-    pandoc0.blocks.traverse(apply).map(Pandoc(pandoc0.meta, _))
+    pandoc0.blocks.traverse(apply).map(blocks => pandoc0.copy(blocks = blocks))
 
   def apply(block0: Block): F[Block]
 

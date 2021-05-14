@@ -13,8 +13,8 @@ import unindent._
 class BottomUpSpec extends munit.FunSuite {
   test("plain transform") {
     val lolcatify = new BottomUp[Id] {
-      val blockTransform: BlockTransform = {
-        case Para(blocks) => Para(blocks ++ List(Space, Str("!!1!")))
+      val blockTransform: BlockTransform = { case Para(blocks) =>
+        Para(blocks ++ List(Space, Str("!!1!")))
       }
 
       val inlineTransform: InlineTransform = {
@@ -23,19 +23,25 @@ class BottomUpSpec extends munit.FunSuite {
       }
     }
 
-    val actual = lolcatify(Pandoc(List(
-      Header(1, List(Str("Header"),    Space, Str("the"), Space, Str("first"))),
-      Para(     List(Str("Paragraph"), Space, Str("the"), Space, Str("first"))),
-      Header(2, List(Str("Header"),    Space, Str("the"), Space, Str("second"))),
-      Para(     List(Str("Paragraph"), Space, Str("the"), Space, Str("second")))
-    )))
+    val actual = lolcatify(
+      Pandoc(
+        Vector(
+          Header(1, Vector(Str("Header"), Space, Str("the"), Space, Str("first"))),
+          Para(Vector(Str("Paragraph"), Space, Str("the"), Space, Str("first"))),
+          Header(2, Vector(Str("Header"), Space, Str("the"), Space, Str("second"))),
+          Para(Vector(Str("Paragraph"), Space, Str("the"), Space, Str("second")))
+        )
+      )
+    )
 
-    val expected = Pandoc(List(
-      Header(1, List(Str("HEADER"),    Space, Str("TEH"), Space, Str("FIRST"))),
-      Para(     List(Str("PARAGRAPH"), Space, Str("TEH"), Space, Str("FIRST"),  Space, Str("!!1!"))),
-      Header(2, List(Str("HEADER"),    Space, Str("TEH"), Space, Str("SECOND"))),
-      Para(     List(Str("PARAGRAPH"), Space, Str("TEH"), Space, Str("SECOND"), Space, Str("!!1!")))
-    ))
+    val expected = Pandoc(
+      Vector(
+        Header(1, Vector(Str("HEADER"), Space, Str("TEH"), Space, Str("FIRST"))),
+        Para(Vector(Str("PARAGRAPH"), Space, Str("TEH"), Space, Str("FIRST"), Space, Str("!!1!"))),
+        Header(2, Vector(Str("HEADER"), Space, Str("TEH"), Space, Str("SECOND"))),
+        Para(Vector(Str("PARAGRAPH"), Space, Str("TEH"), Space, Str("SECOND"), Space, Str("!!1!")))
+      )
+    )
 
     assert(actual == expected)
   }
@@ -50,23 +56,29 @@ class BottomUpSpec extends munit.FunSuite {
       } yield Str(n.toString)
 
     val numberParas = BottomUp.blockM[ParaNumber] {
-      case h @ Header(_, _, inl) => nextNumber.map(num => h.copy(inlines = List(num, Space) ++ inl))
-      case p @ Para(inl)         => nextNumber.map(num => p.copy(inlines = List(num, Space) ++ inl))
+      case h @ Header(_, _, inl) => nextNumber.map(num => h.copy(inlines = Vector(num, Space) ++ inl))
+      case p @ Para(inl)         => nextNumber.map(num => p.copy(inlines = Vector(num, Space) ++ inl))
     }
 
-    val actual = numberParas(Pandoc(List(
-      Header(1, List(Str("Header"),    Space, Str("the"), Space, Str("first"))),
-      Para(     List(Str("Paragraph"), Space, Str("the"), Space, Str("first"))),
-      Header(2, List(Str("Header"),    Space, Str("the"), Space, Str("second"))),
-      Para(     List(Str("Paragraph"), Space, Str("the"), Space, Str("second")))
-    ))).runA(0).value
+    val actual = numberParas(
+      Pandoc(
+        Vector(
+          Header(1, Vector(Str("Header"), Space, Str("the"), Space, Str("first"))),
+          Para(Vector(Str("Paragraph"), Space, Str("the"), Space, Str("first"))),
+          Header(2, Vector(Str("Header"), Space, Str("the"), Space, Str("second"))),
+          Para(Vector(Str("Paragraph"), Space, Str("the"), Space, Str("second")))
+        )
+      )
+    ).runA(0).value
 
-    val expected = Pandoc(List(
-      Header(1, List(Str("1"), Space, Str("Header"),    Space, Str("the"), Space, Str("first"))),
-      Para(     List(Str("2"), Space, Str("Paragraph"), Space, Str("the"), Space, Str("first"))),
-      Header(2, List(Str("3"), Space, Str("Header"),    Space, Str("the"), Space, Str("second"))),
-      Para(     List(Str("4"), Space, Str("Paragraph"), Space, Str("the"), Space, Str("second")))
-    ))
+    val expected = Pandoc(
+      Vector(
+        Header(1, Vector(Str("1"), Space, Str("Header"), Space, Str("the"), Space, Str("first"))),
+        Para(Vector(Str("2"), Space, Str("Paragraph"), Space, Str("the"), Space, Str("first"))),
+        Header(2, Vector(Str("3"), Space, Str("Header"), Space, Str("the"), Space, Str("second"))),
+        Para(Vector(Str("4"), Space, Str("Paragraph"), Space, Str("the"), Space, Str("second")))
+      )
+    )
 
     assert(actual == expected)
   }

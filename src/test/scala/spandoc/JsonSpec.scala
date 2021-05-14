@@ -10,16 +10,20 @@ class JsonSpec extends munit.FunSuite with Encoders with Decoders {
   test("pandoc") {
     assertRoundtrip[Pandoc](
       i"""
-      [{"unMeta":{}},[]]
+      {
+        "blocks":[],
+        "meta":{},
+        "pandoc-api-version":[1,20]
+      }
       """,
-      Pandoc(Meta(Map.empty), Nil)
+      Pandoc(Vector.empty)
     )
   }
 
   test("meta") {
     assertRoundtrip[Meta](
       i"""
-      {"unMeta":{
+      {
         "a":{"t":"MetaString","c":"1"},
         "b":{"t":"MetaInlines","c":[
           {"t":"Str","c":"foo"}
@@ -41,29 +45,29 @@ class JsonSpec extends munit.FunSuite with Encoders with Decoders {
             {"t":"Str","c":"ipsum"}
           ]}
         ]}
-      }}
+      }
       """,
       Meta(
         Map(
           "a" -> MetaString("1"),
-          "b" -> MetaInlines(List(Str("foo"))),
+          "b" -> MetaInlines(Vector(Str("foo"))),
           "c" -> MetaList(
-            List(
+            Vector(
               MetaString("1"),
               MetaString("2"),
               MetaString("3")
             )
           ),
           "d" -> MetaList(
-            List(
-              MetaInlines(List(Str("e"))),
-              MetaInlines(List(Str("f")))
+            Vector(
+              MetaInlines(Vector(Str("e"))),
+              MetaInlines(Vector(Str("f")))
             )
           ),
           "g" -> MetaBool(true),
           "h" -> MetaBlocks(
-            List(
-              Para(List(Str("lorem"), Space, Str("ipsum")))
+            Vector(
+              Para(Vector(Str("lorem"), Space, Str("ipsum")))
             )
           )
         )
@@ -80,7 +84,7 @@ class JsonSpec extends munit.FunSuite with Encoders with Decoders {
         {"t":"Str","c":"ipsum"}
       ]}
       """,
-      Para(List(Str("lorem"), Space, Str("ipsum")))
+      Para(Vector(Str("lorem"), Space, Str("ipsum")))
     )
   }
 
@@ -89,7 +93,7 @@ class JsonSpec extends munit.FunSuite with Encoders with Decoders {
       i"""
       {"t":"CodeBlock","c":[["",["scala"],[]],"1 + 1"]}
       """,
-      CodeBlock(Attr("", List("scala"), Nil), "1 + 1")
+      CodeBlock(Attr("", Vector("scala")), "1 + 1")
     )
   }
 
@@ -107,7 +111,7 @@ class JsonSpec extends munit.FunSuite with Encoders with Decoders {
       i"""
       {"t":"Para","c":[{"t":"Code","c":[["",[],[]],"2 + 2"]}]}
       """,
-      Para(List(Code(Attr("", Nil, Nil), "2 + 2")))
+      Para(Vector(Code(Attr.empty, "2 + 2")))
     )
   }
 
@@ -116,7 +120,7 @@ class JsonSpec extends munit.FunSuite with Encoders with Decoders {
       i"""
       {"t":"Para","c":[{"t":"Math","c":[{"t":"InlineMath","c":[]},"3 + 3"]}]}
       """,
-      Para(List(Math(InlineMath, "3 + 3")))
+      Para(Vector(Math(InlineMath, "3 + 3")))
     )
   }
 
@@ -125,7 +129,7 @@ class JsonSpec extends munit.FunSuite with Encoders with Decoders {
       i"""
       {"t":"Para","c":[{"t":"Math","c":[{"t":"InlineMath","c":[]},"3 + 3"]}]}
       """,
-      Para(List(Math(InlineMath, "3 + 3")))
+      Para(Vector(Math(InlineMath, "3 + 3")))
     )
   }
 
@@ -139,7 +143,7 @@ class JsonSpec extends munit.FunSuite with Encoders with Decoders {
         ]}
       ]}
       """,
-      Para(List(Image(List(Str("alttext")), Target("http://example.com", ""))))
+      Para(Vector(Image(Vector(Str("alttext")), Target("http://example.com", ""))))
     )
   }
 
@@ -148,12 +152,13 @@ class JsonSpec extends munit.FunSuite with Encoders with Decoders {
       i"""
       {"t":"Para","c":[
         {"t":"Link","c":[
+          ["", [], []],
           [{"t":"Str","c":"anchor"}],
           ["url",""]
         ]}
       ]}
       """,
-      Para(List(Link(List(Str("anchor")), Target("url", ""))))
+      Para(Vector(Link(Attr.empty, Vector(Str("anchor")), Target("url", ""))))
     )
   }
 
@@ -166,7 +171,7 @@ class JsonSpec extends munit.FunSuite with Encoders with Decoders {
         [{"t": "Str", "c": "heading 1"}]
       ]}
       """,
-      Header(1, Attr("heading", Nil, Nil), List(Str("heading 1")))
+      Header(1, Attr("heading"), Vector(Str("heading 1")))
     )
   }
 
@@ -178,7 +183,7 @@ class JsonSpec extends munit.FunSuite with Encoders with Decoders {
         []
       ]}
       """,
-      Div(Attr("id", List("class1", "class2"), List("attr1" -> "value1", "attr2" -> "value2")), Nil)
+      Div(Attr("id", Vector("class1", "class2"), Vector("attr1" -> "value1", "attr2" -> "value2")), Vector.empty)
     )
   }
 
@@ -192,10 +197,10 @@ class JsonSpec extends munit.FunSuite with Encoders with Decoders {
       ]}
       """,
       BulletList(
-        List(
-          ListItem(List(Plain(List(Str("item1"))))),
-          ListItem(List(Plain(List(Str("item2"))))),
-          ListItem(List(Plain(List(Str("item3")))))
+        Vector(
+          ListItem(Vector(Plain(Vector(Str("item1"))))),
+          ListItem(Vector(Plain(Vector(Str("item2"))))),
+          ListItem(Vector(Plain(Vector(Str("item3")))))
         )
       )
     )
@@ -222,25 +227,25 @@ class JsonSpec extends munit.FunSuite with Encoders with Decoders {
       ]}
       """,
       BulletList(
-        List(
+        Vector(
           ListItem(
-            List(
-              Plain(List(Str("item1"))),
+            Vector(
+              Plain(Vector(Str("item1"))),
               BulletList(
-                List(
-                  ListItem(List(Plain(List(Str("item1a"))))),
-                  ListItem(List(Plain(List(Str("item1b")))))
+                Vector(
+                  ListItem(Vector(Plain(Vector(Str("item1a"))))),
+                  ListItem(Vector(Plain(Vector(Str("item1b")))))
                 )
               )
             )
           ),
           ListItem(
-            List(
-              Plain(List(Str("item2"))),
+            Vector(
+              Plain(Vector(Str("item2"))),
               BulletList(
-                List(
-                  ListItem(List(Plain(List(Str("item2a"))))),
-                  ListItem(List(Plain(List(Str("item2b")))))
+                Vector(
+                  ListItem(Vector(Plain(Vector(Str("item2a"))))),
+                  ListItem(Vector(Plain(Vector(Str("item2b")))))
                 )
               )
             )
@@ -264,10 +269,10 @@ class JsonSpec extends munit.FunSuite with Encoders with Decoders {
       """,
       OrderedList(
         ListAttributes(1, Decimal, Period),
-        List(
-          ListItem(List(Plain(List(Str("item1"))))),
-          ListItem(List(Plain(List(Str("item2"))))),
-          ListItem(List(Plain(List(Str("item3")))))
+        Vector(
+          ListItem(Vector(Plain(Vector(Str("item1"))))),
+          ListItem(Vector(Plain(Vector(Str("item2"))))),
+          ListItem(Vector(Plain(Vector(Str("item3")))))
         )
       )
     )
@@ -304,27 +309,27 @@ class JsonSpec extends munit.FunSuite with Encoders with Decoders {
       """,
       OrderedList(
         ListAttributes(1, Decimal, Period),
-        List(
+        Vector(
           ListItem(
-            List(
-              Plain(List(Str("item1"))),
+            Vector(
+              Plain(Vector(Str("item1"))),
               OrderedList(
                 ListAttributes(1, LowerAlpha, Period),
-                List(
-                  ListItem(List(Plain(List(Str("item1a"))))),
-                  ListItem(List(Plain(List(Str("item1b")))))
+                Vector(
+                  ListItem(Vector(Plain(Vector(Str("item1a"))))),
+                  ListItem(Vector(Plain(Vector(Str("item1b")))))
                 )
               )
             )
           ),
           ListItem(
-            List(
-              Plain(List(Str("item2"))),
+            Vector(
+              Plain(Vector(Str("item2"))),
               OrderedList(
                 ListAttributes(1, LowerAlpha, Period),
-                List(
-                  ListItem(List(Plain(List(Str("item2a"))))),
-                  ListItem(List(Plain(List(Str("item2b")))))
+                Vector(
+                  ListItem(Vector(Plain(Vector(Str("item2a"))))),
+                  ListItem(Vector(Plain(Vector(Str("item2b")))))
                 )
               )
             )
@@ -349,14 +354,14 @@ class JsonSpec extends munit.FunSuite with Encoders with Decoders {
       ]}
       """,
       DefinitionList(
-        List(
+        Vector(
           DefinitionItem(
-            List(Str("term1")),
-            List(Definition(List(Plain(List(Str("definition1"))))))
+            Vector(Str("term1")),
+            Vector(Definition(Vector(Plain(Vector(Str("definition1"))))))
           ),
           DefinitionItem(
-            List(Str("term2")),
-            List(Definition(List(Plain(List(Str("definition2"))))))
+            Vector(Str("term2")),
+            Vector(Definition(Vector(Plain(Vector(Str("definition2"))))))
           )
         )
       )
@@ -394,27 +399,27 @@ class JsonSpec extends munit.FunSuite with Encoders with Decoders {
       ]}
       """,
       Table(
-        Nil,
-        List(AlignDefault, AlignDefault, AlignDefault),
-        List(0.0, 0.0, 0.0),
-        List(
-          TableCell(List(Plain(List(Str("A"))))),
-          TableCell(List(Plain(List(Str("B"))))),
-          TableCell(List(Plain(List(Str("C")))))
+        Vector.empty,
+        Vector(AlignDefault, AlignDefault, AlignDefault),
+        Vector(0.0, 0.0, 0.0),
+        Vector(
+          TableCell(Vector(Plain(Vector(Str("A"))))),
+          TableCell(Vector(Plain(Vector(Str("B"))))),
+          TableCell(Vector(Plain(Vector(Str("C")))))
         ),
-        List(
+        Vector(
           TableRow(
-            List(
-              TableCell(List(Plain(List(Str("1"))))),
-              TableCell(List(Plain(List(Str("2"))))),
-              TableCell(List(Plain(List(Str("3")))))
+            Vector(
+              TableCell(Vector(Plain(Vector(Str("1"))))),
+              TableCell(Vector(Plain(Vector(Str("2"))))),
+              TableCell(Vector(Plain(Vector(Str("3")))))
             )
           ),
           TableRow(
-            List(
-              TableCell(List(Plain(List(Str("4"))))),
-              TableCell(List(Plain(List(Str("5"))))),
-              TableCell(List(Plain(List(Str("6")))))
+            Vector(
+              TableCell(Vector(Plain(Vector(Str("4"))))),
+              TableCell(Vector(Plain(Vector(Str("5"))))),
+              TableCell(Vector(Plain(Vector(Str("6")))))
             )
           )
         )

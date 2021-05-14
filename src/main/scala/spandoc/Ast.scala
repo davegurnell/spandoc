@@ -1,10 +1,15 @@
 package spandoc
 
-final case class Pandoc(meta: Meta, blocks: List[Block])
+final case class Pandoc(blocks: Vector[Block], meta: Meta = Meta.empty, apiVersion: PandocApiVersion = Pandoc.defaultVersion)
+
+final case class PandocApiVersion(major: Int, minor: Int)
 
 object Pandoc {
-  def apply(blocks: List[Block]): Pandoc =
-    Pandoc(Meta.empty, blocks)
+  val defaultVersion: PandocApiVersion =
+    PandocApiVersion(1, 20)
+
+  def apply(blocks: Vector[Block]): Pandoc =
+    Pandoc(blocks, Meta.empty, defaultVersion)
 }
 
 final case class Meta(data: Map[String, MetaValue])
@@ -15,60 +20,60 @@ object Meta {
 
 sealed abstract class MetaValue
 final case class MetaMap(values: Map[String, MetaValue]) extends MetaValue
-final case class MetaList(values: List[MetaValue]) extends MetaValue
+final case class MetaList(values: Vector[MetaValue]) extends MetaValue
 final case class MetaBool(value: Boolean) extends MetaValue
 final case class MetaString(value: String) extends MetaValue
-final case class MetaInlines(inlines: List[Inline]) extends MetaValue
-final case class MetaBlocks(blocks: List[Block]) extends MetaValue
+final case class MetaInlines(inlines: Vector[Inline]) extends MetaValue
+final case class MetaBlocks(blocks: Vector[Block]) extends MetaValue
 
 sealed abstract class Node
 
 sealed abstract class Block extends Node
-final case class Plain(inlines: List[Inline]) extends Block
-final case class Para(inlines: List[Inline]) extends Block
+final case class Plain(inlines: Vector[Inline]) extends Block
+final case class Para(inlines: Vector[Inline]) extends Block
 final case class CodeBlock(attr: Attr, text: String) extends Block
 final case class RawBlock(format: String, text: String) extends Block
-final case class BlockQuote(blocks: List[Block]) extends Block
-final case class OrderedList(attr: ListAttributes, items: List[ListItem]) extends Block
-final case class BulletList(items: List[ListItem]) extends Block
-final case class DefinitionList(items: List[DefinitionItem]) extends Block
-final case class Header(level: Int, attr: Attr, inlines: List[Inline]) extends Block
+final case class BlockQuote(blocks: Vector[Block]) extends Block
+final case class OrderedList(attr: ListAttributes, items: Vector[ListItem]) extends Block
+final case class BulletList(items: Vector[ListItem]) extends Block
+final case class DefinitionList(items: Vector[DefinitionItem]) extends Block
+final case class Header(level: Int, attr: Attr, inlines: Vector[Inline]) extends Block
 case object HorizontalRule extends Block
 final case class Table(
-  caption: List[Inline],
-  columnAlignments: List[Alignment],
-  columnWidths: List[Double],
-  columnHeaders: List[TableCell],
-  rows: List[TableRow]
+  caption: Vector[Inline],
+  columnAlignments: Vector[Alignment],
+  columnWidths: Vector[Double],
+  columnHeaders: Vector[TableCell],
+  rows: Vector[TableRow]
 ) extends Block
-final case class Div(attr: Attr, blocks: List[Block]) extends Block
+final case class Div(attr: Attr, blocks: Vector[Block]) extends Block
 case object Null extends Block
 
 object Header {
-  def apply(level: Int, inlines: List[Inline]): Header =
+  def apply(level: Int, inlines: Vector[Inline]): Header =
     Header(level, Attr.empty, inlines)
 }
 
 sealed abstract class Inline extends Node
 final case class Str(text: String) extends Inline
-final case class Emph(inlines: List[Inline]) extends Inline
-final case class Strong(inlines: List[Inline]) extends Inline
-final case class Strikeout(inlines: List[Inline]) extends Inline
-final case class Superscript(inlines: List[Inline]) extends Inline
-final case class Subscript(inlines: List[Inline]) extends Inline
-final case class SmallCaps(inlines: List[Inline]) extends Inline
-final case class Quoted(tpe: QuoteType, inlines: List[Inline]) extends Inline
-final case class Cite(citations: List[Citation], inlines: List[Inline]) extends Inline
+final case class Emph(inlines: Vector[Inline]) extends Inline
+final case class Strong(inlines: Vector[Inline]) extends Inline
+final case class Strikeout(inlines: Vector[Inline]) extends Inline
+final case class Superscript(inlines: Vector[Inline]) extends Inline
+final case class Subscript(inlines: Vector[Inline]) extends Inline
+final case class SmallCaps(inlines: Vector[Inline]) extends Inline
+final case class Quoted(tpe: QuoteType, inlines: Vector[Inline]) extends Inline
+final case class Cite(citations: Vector[Citation], inlines: Vector[Inline]) extends Inline
 final case class Code(attr: Attr, text: String) extends Inline
 case object Space extends Inline
 case object SoftBreak extends Inline
 case object LineBreak extends Inline
 final case class Math(tpe: MathType, text: String) extends Inline
 final case class RawInline(format: String, text: String) extends Inline
-final case class Link(inlines: List[Inline], target: Target) extends Inline
-final case class Image(inlines: List[Inline], target: Target) extends Inline
-final case class Note(blocks: List[Block]) extends Inline
-final case class Span(attr: Attr, inlines: List[Inline]) extends Inline
+final case class Link(attr: Attr, inlines: Vector[Inline], target: Target) extends Inline
+final case class Image(inlines: Vector[Inline], target: Target) extends Inline
+final case class Note(blocks: Vector[Block]) extends Inline
+final case class Span(attr: Attr, inlines: Vector[Inline]) extends Inline
 
 sealed abstract class Alignment
 case object AlignLeft extends Alignment
@@ -79,7 +84,7 @@ case object AlignDefault extends Alignment
 // TODO: Check the first argument is actually a level:
 final case class ListAttributes(level: Int, style: ListNumberStyle, delim: ListNumberDelim)
 
-final case class ListItem(blocks: List[Block])
+final case class ListItem(blocks: Vector[Block])
 
 sealed abstract class ListNumberStyle
 case object DefaultStyle extends ListNumberStyle
@@ -96,17 +101,17 @@ case object Period extends ListNumberDelim
 case object OneParen extends ListNumberDelim
 case object TwoParens extends ListNumberDelim
 
-final case class DefinitionItem(term: List[Inline], definitions: List[Definition])
-final case class Definition(blocks: List[Block])
+final case class DefinitionItem(term: Vector[Inline], definitions: Vector[Definition])
+final case class Definition(blocks: Vector[Block])
 
-final case class Attr(id: String, classes: List[String], attr: List[(String, String)])
+final case class Attr(id: String, classes: Vector[String] = Vector.empty, attr: Vector[(String, String)] = Vector.empty)
 
 object Attr {
-  val empty = Attr("", Nil, Nil)
+  val empty = Attr("", Vector.empty, Vector.empty)
 }
 
-final case class TableRow(cells: List[TableCell])
-final case class TableCell(blocks: List[Block])
+final case class TableRow(cells: Vector[TableCell])
+final case class TableCell(blocks: Vector[Block])
 
 sealed abstract class QuoteType
 case object SingleQuote extends QuoteType
@@ -120,8 +125,8 @@ case object InlineMath extends MathType
 
 final case class Citation(
   id: String,
-  prefix: List[Inline],
-  suffix: List[Inline],
+  prefix: Vector[Inline],
+  suffix: Vector[Inline],
   mode: CitationMode,
   noteNum: Int,
   hash: Int
