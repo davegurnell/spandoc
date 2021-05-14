@@ -8,11 +8,10 @@ import cats.syntax.traverse._
 import io.circe._
 import io.circe.jawn._
 import io.circe.syntax._
-import org.scalatest._
 import unindent._
 
-class BottomUpSpec extends FreeSpec with Matchers {
-  "plain transform" in {
+class BottomUpSpec extends munit.FunSuite {
+  test("plain transform") {
     val lolcatify = new BottomUp[Id] {
       val blockTransform: BlockTransform = {
         case Para(blocks) => Para(blocks ++ List(Space, Str("!!1!")))
@@ -38,10 +37,10 @@ class BottomUpSpec extends FreeSpec with Matchers {
       Para(     List(Str("PARAGRAPH"), Space, Str("TEH"), Space, Str("SECOND"), Space, Str("!!1!")))
     ))
 
-    actual should equal(expected)
+    assert(actual == expected)
   }
 
-  "monadic transform" in {
+  test("monadic transform") {
     type ParaNumber[A] = State[Int, A]
 
     val nextNumber: ParaNumber[Inline] =
@@ -69,6 +68,6 @@ class BottomUpSpec extends FreeSpec with Matchers {
       Para(     List(Str("4"), Space, Str("Paragraph"), Space, Str("the"), Space, Str("second")))
     ))
 
-    actual should equal(expected)
+    assert(actual == expected)
   }
 }

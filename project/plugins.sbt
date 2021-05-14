@@ -1,3 +1,2 @@
-addSbtPlugin("org.scoverage" % "sbt-scoverage"     % "1.6.1")
-addSbtPlugin("ch.epfl.scala" % "sbt-release-early" % "2.1.1")
-addSbtPlugin("org.scalameta" % "sbt-scalafmt"      % "2.2.1")
+addSbtPlugin("com.codecommit" % "sbt-github-actions" % "0.10.1")
+addSbtPlugin("com.geirsson"   % "sbt-ci-release"     % "1.5.7")
