@@ -27,6 +27,8 @@ ThisBuild / libraryDependencies ++= Seq(
 
 // Versioning -----------------------------------
 
+ThisBuild / versionScheme := Some("early-semver")
+
 git.gitUncommittedChanges := git.gitCurrentTags.value.isEmpty // Put "-SNAPSHOT" on a commit if it's not a tag
 
 // Github Actions -------------------------------
