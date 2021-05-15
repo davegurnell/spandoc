@@ -4,6 +4,7 @@ import cats.data._
 import cats.syntax.all._
 import io.circe._
 import io.circe.syntax._
+import spandoc.ast._
 
 trait Encoders extends EncoderHelpers {
   implicit lazy val pandocEncoder: Encoder[Pandoc] =
@@ -35,6 +36,7 @@ trait Encoders extends EncoderHelpers {
     Encoder.instance[Block] {
       case Plain(inlines)               => typedNode("Plain")(inlines)
       case Para(inlines)                => typedNode("Para")(inlines)
+      case LineBlock(lines)             => typedNode("LineBlock")(lines)
       case CodeBlock(attr, text)        => typedNode("CodeBlock")((attr, text))
       case RawBlock(format, text)       => typedNode("RawBlock")((format, text))
       case BlockQuote(blocks)           => typedNode("BlockQuote")(blocks)
@@ -50,25 +52,25 @@ trait Encoders extends EncoderHelpers {
 
   implicit lazy val inlineEncoder: Encoder[Inline] =
     Encoder.instance[Inline] {
-      case Str(text)                   => typedNode("Str")(text)
-      case Emph(inlines)               => typedNode("Emph")(inlines)
-      case Strong(inlines)             => typedNode("Strong")(inlines)
-      case Strikeout(inlines)          => typedNode("Strikeout")(inlines)
-      case Superscript(inlines)        => typedNode("Superscript")(inlines)
-      case Subscript(inlines)          => typedNode("Subscript")(inlines)
-      case SmallCaps(inlines)          => typedNode("SmallCaps")(inlines)
-      case Quoted(tpe, inlines)        => typedNode("Quoted")((tpe, inlines))
-      case Cite(citations, inlines)    => typedNode("Cite")((citations, inlines))
-      case Code(attr, text)            => typedNode("Code")((attr, text))
-      case Space                       => typedNode("Space")(Json.arr())
-      case SoftBreak                   => typedNode("SoftBreak")(Json.arr())
-      case LineBreak                   => typedNode("LineBreak")(Json.arr())
-      case Math(tpe, text)             => typedNode("Math")((tpe, text))
-      case RawInline(format, text)     => typedNode("RawInline")((format, text))
-      case Link(attr, inlines, target) => typedNode("Link")((attr, inlines, target))
-      case Image(inlines, target)      => typedNode("Image")((inlines, target))
-      case Note(blocks)                => typedNode("Note")(blocks)
-      case Span(attr, inlines)         => typedNode("Span")((attr, inlines))
+      case Str(text)                    => typedNode("Str")(text)
+      case Emph(inlines)                => typedNode("Emph")(inlines)
+      case Strong(inlines)              => typedNode("Strong")(inlines)
+      case Strikeout(inlines)           => typedNode("Strikeout")(inlines)
+      case Superscript(inlines)         => typedNode("Superscript")(inlines)
+      case Subscript(inlines)           => typedNode("Subscript")(inlines)
+      case SmallCaps(inlines)           => typedNode("SmallCaps")(inlines)
+      case Quoted(tpe, inlines)         => typedNode("Quoted")((tpe, inlines))
+      case Cite(citations, inlines)     => typedNode("Cite")((citations, inlines))
+      case Code(attr, text)             => typedNode("Code")((attr, text))
+      case Space                        => typedNode("Space")(Json.arr())
+      case SoftBreak                    => typedNode("SoftBreak")(Json.arr())
+      case LineBreak                    => typedNode("LineBreak")(Json.arr())
+      case Math(tpe, text)              => typedNode("Math")((tpe, text))
+      case RawInline(format, text)      => typedNode("RawInline")((format, text))
+      case Link(attr, inlines, target)  => typedNode("Link")((attr, inlines, target))
+      case Image(attr, inlines, target) => typedNode("Image")((attr, inlines, target))
+      case Note(blocks)                 => typedNode("Note")(blocks)
+      case Span(attr, inlines)          => typedNode("Span")((attr, inlines))
     }
 
   implicit lazy val alignmentEncoder: Encoder[Alignment] =
@@ -93,7 +95,7 @@ trait Encoders extends EncoderHelpers {
     Encoder[Vector[Block]].contramap(unlift(Definition.unapply))
 
   implicit lazy val attrEncoder: Encoder[Attr] =
-    Encoder[(String, Vector[String], Vector[(String, String)])].contramap(unlift(Attr.unapply))
+    Encoder[(String, List[String], List[(String, String)])].contramap(unlift(Attr.unapply))
 
   implicit lazy val tableRowEncoder: Encoder[TableRow] =
     Encoder[Vector[TableCell]].contramap(unlift(TableRow.unapply))

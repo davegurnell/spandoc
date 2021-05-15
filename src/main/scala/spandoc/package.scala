@@ -1,6 +1,7 @@
 package object spandoc extends Encoders with Decoders {
   import io.circe._
   import io.circe.jawn._
+  import spandoc.ast.Pandoc
 
   def transformStdin(transform: Pandoc => Pandoc): Unit =
     transformString(transform)(scala.io.Source.stdin.mkString)
@@ -10,6 +11,7 @@ package object spandoc extends Encoders with Decoders {
     parse(input).flatMap(transformJson(transform)).map(_.noSpaces)
 
   def transformJson(transform: Pandoc => Pandoc)(json0: Json): Either[Error, Json] =
-    Decoder[Pandoc].apply(json0.hcursor)
+    Decoder[Pandoc]
+      .apply(json0.hcursor)
       .map(pandoc => Encoder[Pandoc].apply(transform(pandoc)))
 }

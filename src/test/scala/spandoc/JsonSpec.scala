@@ -4,6 +4,7 @@ import io.circe._
 import io.circe.jawn._
 import io.circe.syntax._
 import unindent._
+import spandoc.ast._
 
 class JsonSpec extends munit.FunSuite with Encoders with Decoders {
 
@@ -93,7 +94,7 @@ class JsonSpec extends munit.FunSuite with Encoders with Decoders {
       i"""
       {"t":"CodeBlock","c":[["",["scala"],[]],"1 + 1"]}
       """,
-      CodeBlock(Attr("", Vector("scala")), "1 + 1")
+      CodeBlock(Attr("", List("scala")), "1 + 1")
     )
   }
 
@@ -138,12 +139,13 @@ class JsonSpec extends munit.FunSuite with Encoders with Decoders {
       i"""
       {"t":"Para","c":[
         {"t":"Image","c":[
+          ["", [], []],
           [{"t":"Str","c":"alttext"}],
           ["http://example.com",""]
         ]}
       ]}
       """,
-      Para(Vector(Image(Vector(Str("alttext")), Target("http://example.com", ""))))
+      Para(Vector(Image(Attr.empty, Vector(Str("alttext")), Target("http://example.com", ""))))
     )
   }
 
@@ -183,7 +185,7 @@ class JsonSpec extends munit.FunSuite with Encoders with Decoders {
         []
       ]}
       """,
-      Div(Attr("id", Vector("class1", "class2"), Vector("attr1" -> "value1", "attr2" -> "value2")), Vector.empty)
+      Div(Attr("id", List("class1", "class2"), List("attr1" -> "value1", "attr2" -> "value2")), Vector.empty)
     )
   }
 
@@ -431,7 +433,7 @@ class JsonSpec extends munit.FunSuite with Encoders with Decoders {
     val decoded = unsafeDecode[A](unsafeParse(json))
 
     // Decode and check for equality:
-    assert(decoded == expected)
+    assert(clue(decoded) == clue(expected))
 
     // Round trip and check for equality again:
     assert(unsafeDecode[A](encode(decoded)) == expected)

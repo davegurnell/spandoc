@@ -4,6 +4,7 @@ package transform
 import cats.{Id, Monad}
 import cats.implicits._
 import scala.language.higherKinds
+import spandoc.ast._
 
 object TopDown {
   def block(func: PartialFunction[Block, Block]): TopDown[Id] =
@@ -31,7 +32,7 @@ object TopDown {
     }
 }
 
-abstract class TopDown[F[_]](implicit monad: Monad[F]) extends Transform[F] {
+abstract class TopDown[F[_]: Monad] extends Transform[F] {
   type BlockTransform = PartialFunction[Block, F[Block]]
   type InlineTransform = PartialFunction[Inline, F[Inline]]
 
@@ -53,6 +54,7 @@ abstract class TopDown[F[_]](implicit monad: Monad[F]) extends Transform[F] {
       case BlockMatches(block)          => block
       case Plain(inlines)               => inlines.traverse(apply).map(Plain(_))
       case Para(inlines)                => inlines.traverse(apply).map(Para(_))
+      case LineBlock(lines)             => lines.traverse(_.traverse(apply)).map(LineBlock(_))
       case b: CodeBlock                 => pure(b)
       case b: RawBlock                  => pure(b)
       case BlockQuote(blocks)           => blocks.traverse(apply).map(BlockQuote(_))
@@ -73,25 +75,25 @@ abstract class TopDown[F[_]](implicit monad: Monad[F]) extends Transform[F] {
 
   def apply(inline0: Inline): F[Inline] =
     inline0 match {
-      case InlineMatches(inline)       => inline
-      case i: Str                      => pure(i)
-      case Emph(inlines)               => inlines.traverse(apply).map(Emph(_))
-      case Strong(inlines)             => inlines.traverse(apply).map(Strong(_))
-      case Strikeout(inlines)          => inlines.traverse(apply).map(Strikeout(_))
-      case Superscript(inlines)        => inlines.traverse(apply).map(Superscript(_))
-      case Subscript(inlines)          => inlines.traverse(apply).map(Subscript(_))
-      case SmallCaps(inlines)          => inlines.traverse(apply).map(SmallCaps(_))
-      case Quoted(tpe, inlines)        => inlines.traverse(apply).map(Quoted(tpe, _))
-      case Cite(citations, inlines)    => inlines.traverse(apply).map(Cite(citations, _))
-      case b: Code                     => pure(b)
-      case Space                       => pure(Space)
-      case SoftBreak                   => pure(SoftBreak)
-      case LineBreak                   => pure(LineBreak)
-      case b: Math                     => pure(b)
-      case b: RawInline                => pure(b)
-      case Link(attr, inlines, target) => inlines.traverse(apply).map(Link(attr, _, target))
-      case Image(inlines, target)      => inlines.traverse(apply).map(Image(_, target))
-      case Note(blocks)                => blocks.traverse(apply).map(Note(_))
-      case Span(attr, inlines)         => inlines.traverse(apply).map(Span(attr, _))
+      case InlineMatches(inline)        => inline
+      case i: Str                       => pure(i)
+      case Emph(inlines)                => inlines.traverse(apply).map(Emph(_))
+      case Strong(inlines)              => inlines.traverse(apply).map(Strong(_))
+      case Strikeout(inlines)           => inlines.traverse(apply).map(Strikeout(_))
+      case Superscript(inlines)         => inlines.traverse(apply).map(Superscript(_))
+      case Subscript(inlines)           => inlines.traverse(apply).map(Subscript(_))
+      case SmallCaps(inlines)           => inlines.traverse(apply).map(SmallCaps(_))
+      case Quoted(tpe, inlines)         => inlines.traverse(apply).map(Quoted(tpe, _))
+      case Cite(citations, inlines)     => inlines.traverse(apply).map(Cite(citations, _))
+      case b: Code                      => pure(b)
+      case Space                        => pure(Space)
+      case SoftBreak                    => pure(SoftBreak)
+      case LineBreak                    => pure(LineBreak)
+      case b: Math                      => pure(b)
+      case b: RawInline                 => pure(b)
+      case Link(attr, inlines, target)  => inlines.traverse(apply).map(Link(attr, _, target))
+      case Image(attr, inlines, target) => inlines.traverse(apply).map(Image(attr, _, target))
+      case Note(blocks)                 => blocks.traverse(apply).map(Note(_))
+      case Span(attr, inlines)          => inlines.traverse(apply).map(Span(attr, _))
     }
 }

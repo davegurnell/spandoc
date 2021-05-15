@@ -4,6 +4,7 @@ import cats.data._
 import cats.implicits._
 import io.circe._
 import io.circe.syntax._
+import spandoc.ast._
 
 trait Decoders extends DecoderHelpers {
   implicit lazy val pandocDecoder: Decoder[Pandoc] =
@@ -35,6 +36,7 @@ trait Decoders extends DecoderHelpers {
     nodeDecoder[Block] {
       case "Plain"          => nodeContent[Vector[Inline]].map[Block](Plain.apply)
       case "Para"           => nodeContent[Vector[Inline]].map[Block](Para.apply)
+      case "LineBlock"      => nodeContent[Vector[Vector[Inline]]].map[Block](LineBlock.apply)
       case "CodeBlock"      => nodeContent[(Attr, String)].map[Block](CodeBlock.tupled)
       case "RawBlock"       => nodeContent[(String, String)].map[Block](RawBlock.tupled)
       case "BlockQuote"     => nodeContent[Vector[Block]].map[Block](BlockQuote.apply)
@@ -66,7 +68,7 @@ trait Decoders extends DecoderHelpers {
       case "Math"        => nodeContent[(MathType, String)].map[Inline](Math.tupled)
       case "RawInline"   => nodeContent[(String, String)].map[Inline](RawInline.tupled)
       case "Link"        => nodeContent[(Attr, Vector[Inline], Target)].map[Inline](Link.tupled)
-      case "Image"       => nodeContent[(Vector[Inline], Target)].map[Inline](Image.tupled)
+      case "Image"       => nodeContent[(Attr, Vector[Inline], Target)].map[Inline](Image.tupled)
       case "Note"        => nodeContent[Vector[Block]].map[Inline](Note.apply)
       case "Span"        => nodeContent[(Attr, Vector[Inline])].map[Inline](Span.tupled)
     }
@@ -111,7 +113,7 @@ trait Decoders extends DecoderHelpers {
     Decoder[Vector[Block]].map(Definition.apply)
 
   implicit lazy val attrDecoder: Decoder[Attr] =
-    Decoder[(String, Vector[String], Vector[(String, String)])].map { case (i, c, a) => Attr(i, c, a) }
+    Decoder[(String, List[String], List[(String, String)])].map { case (i, c, a) => Attr(i, c, a) }
 
   implicit lazy val tableRowDecoder: Decoder[TableRow] =
     Decoder[Vector[TableCell]].map(TableRow.apply)

@@ -1,12 +1,12 @@
 #!/usr/bin/env amm
 
-interp.load.ivy("com.davegurnell" %% "spandoc" % "0.2.1")
+interp.load.ivy("com.davegurnell" %% "spandoc" % "0.6.0")
 
 @
 import spandoc._
 import spandoc.transform.TopDown
 
-object filter extends TopDown[Id] {
+object transform extends TopDown[Id] {
   def blockTransform = {}
 
   def inlineTransform = { case Str(text) =>
@@ -14,4 +14,4 @@ object filter extends TopDown[Id] {
   }
 }
 
-transformStdin(filter)
+transformStdin(transform)

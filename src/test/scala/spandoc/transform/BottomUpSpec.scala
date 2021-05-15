@@ -9,6 +9,7 @@ import io.circe._
 import io.circe.jawn._
 import io.circe.syntax._
 import unindent._
+import spandoc.ast._
 
 class BottomUpSpec extends munit.FunSuite {
   test("plain transform") {

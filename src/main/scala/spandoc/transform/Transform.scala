@@ -4,6 +4,7 @@ package transform
 import cats.Monad
 import cats.implicits._
 import scala.language.higherKinds
+import spandoc.ast._
 
 abstract class Transform[F[_]](implicit monad: Monad[F]) extends (Pandoc => F[Pandoc]) {
   def pure[A](value: A): F[A] =

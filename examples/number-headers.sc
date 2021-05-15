@@ -1,6 +1,6 @@
 #!/usr/bin/env amm
 
-interp.load.ivy("com.davegurnell" %% "spandoc" % "0.2.1")
+interp.load.ivy("com.davegurnell" %% "spandoc" % "0.6.0")
 
 @
 import cats.data.State
@@ -9,7 +9,7 @@ import spandoc.transform.TopDown
 
 /* **********************************************
    Note: This has a bunch of bugs in it.
-   I haven't gotten around to fixing it yet.
+   I haven't gotten around to fixing them yet.
 ********************************************** */
 
 // State type:

@@ -1,6 +1,6 @@
 #!/usr/bin/env amm
 
-interp.load.ivy("com.davegurnell" %% "spandoc" % "0.2.1")
+interp.load.ivy("com.davegurnell" %% "spandoc" % "0.6.0")
 
 @
 import spandoc._
@@ -11,7 +11,7 @@ import cats.syntax.traverse._
 
 type HeaderState[A] = State[Boolean, A]
 
-object filter extends TopDown[HeaderState] {
+object transform extends TopDown[HeaderState] {
   def blockTransform = { case Header(level, attr, inlineNodes) =>
     for {
       _ <- State.set(true)
@@ -27,4 +27,4 @@ object filter extends TopDown[HeaderState] {
   }
 }
 
-transformStdin(ast => filter(ast).runA(false).value)
+transformStdin(ast => transform(ast).runA(false).value)
