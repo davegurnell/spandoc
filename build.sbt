@@ -39,6 +39,22 @@ ThisBuild / githubWorkflowJavaVersions := Seq("adopt@1.11")
 
 usePgpKeyHex("932DAC1231EE4ACF")
 
+ThisBuild / githubWorkflowTargetTags ++= Seq("v*")
+
+ThisBuild / githubWorkflowPublishTargetBranches := Seq(RefPredicate.StartsWith(Ref.Tag("v")))
+
+ThisBuild / githubWorkflowPublish := Seq(
+  WorkflowStep.Sbt(
+    List("ci-release"),
+    env = Map(
+      "PGP_PASSPHRASE"    -> "${{ secrets.PGP_PASSPHRASE }}",
+      "PGP_SECRET"        -> "${{ secrets.PGP_SECRET }}",
+      "SONATYPE_PASSWORD" -> "${{ secrets.SONATYPE_PASSWORD }}",
+      "SONATYPE_USERNAME" -> "${{ secrets.SONATYPE_USERNAME }}"
+    )
+  )
+)
+
 ThisBuild / licenses += ("Apache-2.0", url("http://apache.org/licenses/LICENSE-2.0"))
 
 ThisBuild / homepage := Some(url("https://github.com/davegurnell/spandoc"))
